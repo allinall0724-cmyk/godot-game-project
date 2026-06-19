@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=3 uid="uid://bfx7t2cqq6i8"]
+
+[ext_resource type="Script" path="res://scenes/world/world.gd" id="1_n5h4j"]
+
+[sub_resource type="BoxMesh" id="1_mesh"]
+
+[sub_resource type="StandardMaterial3D" id="1_mat"]
+albedo_color = Color(0.3, 0.4, 0.2, 1)
+
+[sub_resource type="BoxShape3D" id="1_shape"]
+
+[sub_resource type="Environment" id="1_env"]
+ambient_light_source = 1
+ambient_light_energy = 0.8
+
+[node name="World" type="Node3D"]
+script = ExtResource("1_n5h4j")
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+transform = Transform3D(50, 0, 0, 0, 0.1, 0, 0, 0, 50, 0, -0.1, 0)
+mesh = SubResource("1_mesh")
+material_override = SubResource("1_mat")
+
+[node name="GroundCollider" type="StaticBody3D" parent="."]
+transform = Transform3D(50, 0, 0, 0, 0.1, 0, 0, 0, 50, 0, -0.1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="GroundCollider"]
+shape = SubResource("1_shape")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.707, -0.5, 0.5, 0, 0.866, 0.5, -0.707, -0.354, 0.612, 10, 10, 10)
+energy_multiplier = 1.5
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("1_env")
