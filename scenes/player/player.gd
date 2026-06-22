@@ -1371,7 +1371,7 @@ func _eff_structure(mv: Dictionary) -> void:
 		body.global_position = pos + Vector3.UP * (dims.y * 0.5)
 		body.look_at(body.global_position + dir, Vector3.UP)
 		if kind == "ramp":
-			body.rotate_object_local(Vector3.RIGHT, deg_to_rad(-22.0))
+			body.rotate_object_local(Vector3.RIGHT, deg_to_rad(22.0))
 
 	# Rise-from-ground spawn + auto-despawn.
 	var final_pos := body.global_position
