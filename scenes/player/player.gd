@@ -180,6 +180,28 @@ const SPELLS := {
 	"venom_bolt":     {"name": "Venom Bolt", "effect": "projectile", "cost": 14, "cd": 0.6, "count": 1, "size": 0.8, "speed": 26.0, "dmg": 2, "dot": 3.0, "dot_dur": 4.0, "element": "nature", "color": NATURE_COL},
 	"gale_boomerang": {"name": "Gale Boomerang", "effect": "boomerang", "cost": 18, "cd": 1.0, "speed": 22.0, "range": 10.0, "size": 1.0, "dmg": 4, "element": "wind", "color": WIND_COL},
 	"thorns_aura":    {"name": "Thorns Aura", "effect": "buff", "cost": 16, "cd": 8.0, "buff": "thorns", "amount": 4, "duration": 10.0, "element": "nature", "color": NATURE_COL},
+
+	# === Pass 6 — more mechanics, light/shadow/nature depth ===
+	"soul_harvest":   {"name": "Soul Harvest", "effect": "drain_aoe", "cost": 28, "cd": 3.0, "radius": 5.0, "dmg": 4, "heal_each": 4, "element": "shadow", "color": SHADOW_COL},
+	"holy_nova":      {"name": "Holy Nova", "effect": "holy_nova", "cost": 24, "cd": 2.5, "radius": 4.5, "dmg": 5, "heal": 20, "element": "light", "color": LIGHT_COL},
+	"prism_lance":    {"name": "Prism Lance", "effect": "line", "cost": 24, "cd": 1.6, "windup": 0.2, "range": 40.0, "width": 1.6, "dmg": 7, "element": "light", "color": LIGHT_COL},
+	"storm_cloud":    {"name": "Storm Cloud", "effect": "cloud", "cost": 26, "cd": 5.0, "strikes": 7, "interval": 0.5, "range": 12.0, "dmg": 4, "element": "lightning", "color": LTNG_COL},
+	"entangling_vines":{"name": "Entangling Vines", "effect": "debuff", "cost": 20, "cd": 2.5, "status": "root", "radius": 4.5, "duration": 2.0, "dot": 3.0, "element": "nature", "color": NATURE_COL},
+	"glacial_spike":  {"name": "Glacial Spike", "effect": "projectile", "cost": 18, "cd": 1.0, "count": 1, "size": 1.3, "speed": 24.0, "dmg": 6, "slow": 0.2, "slow_dur": 3.0, "element": "ice", "color": ICE_COL},
+	"comet_storm":    {"name": "Comet Storm", "effect": "projectile", "cost": 26, "cd": 1.4, "count": 4, "size": 0.7, "speed": 20.0, "dmg": 3, "homing": 5.0, "element": "fire", "color": FIRE_COL},
+	"quicksand":      {"name": "Quicksand", "effect": "zone", "cost": 22, "cd": 4.0, "radius": 4.0, "life": 7.0, "slow": 0.3, "slow_dur": 1.0, "dot": 2.0, "element": "earth", "color": Color(0.5, 0.42, 0.26)},
+	"venom_spray":    {"name": "Venom Spray", "effect": "shotgun", "cost": 22, "cd": 1.0, "pellets": 7, "spread": 0.5, "speed": 24.0, "size": 0.6, "dmg": 2, "dot": 2.5, "dot_dur": 3.0, "element": "nature", "color": NATURE_COL},
+	"ward_of_light":  {"name": "Ward of Light", "effect": "buff", "cost": 18, "cd": 10.0, "buff": "shield", "amount": 0.45, "duration": 10.0, "element": "light", "color": LIGHT_COL},
+
+	# === Pass 7 — deployables, control, mobility, buffs ===
+	"black_hole":      {"name": "Black Hole", "effect": "blackhole", "cost": 45, "cd": 7.0, "windup": 0.3, "radius": 8.0, "force": 15.0, "dmg": 14, "ticks": 10, "element": "shadow", "color": Color(0.42, 0.2, 0.56)},
+	"arcane_sentry":   {"name": "Arcane Sentry", "effect": "sentry", "cost": 28, "cd": 6.0, "life": 8.0, "interval": 0.6, "range": 14.0, "speed": 24.0, "dmg": 3, "element": "arcane", "color": ARCANE_COL},
+	"upheaval":        {"name": "Upheaval", "effect": "launch", "cost": 22, "cd": 2.0, "radius": 4.5, "dmg": 5, "power": 10.0, "element": "earth", "color": EARTH_COL},
+	"phase_dash":      {"name": "Phase Dash", "effect": "phase", "cost": 16, "cd": 1.2, "speed": 30.0, "invuln": 0.5, "element": "wind", "color": ARCANE_COL},
+	"battle_trance":   {"name": "Battle Trance", "effect": "buff", "cost": 22, "cd": 9.0, "buff": "frenzy", "amount": 0.4, "speed_amount": 3.0, "duration": 12.0, "element": "fire", "color": FIRE_COL},
+	"ice_comet":       {"name": "Ice Comet", "effect": "meteor", "cost": 30, "cd": 2.2, "windup": 0.6, "size": 2.0, "dmg": 9, "radius": 3.4, "element": "ice", "color": ICE_COL},
+	"shadow_bolt":     {"name": "Shadow Bolt", "effect": "projectile", "cost": 14, "cd": 0.6, "count": 1, "size": 0.9, "speed": 28.0, "dmg": 3, "dot": 2.5, "dot_dur": 3.0, "element": "shadow", "color": SHADOW_COL},
+	"sanctified_ground":{"name": "Sanctified Ground", "effect": "heal_zone", "cost": 20, "cd": 8.0, "radius": 4.0, "life": 8.0, "heal": 4, "element": "light", "color": LIGHT_COL},
 }
 
 # Until leveling exists, start with a varied 5-spell loadout (bound to Q/R/F/C/V).
@@ -766,6 +788,10 @@ func _run_effect(mv: Dictionary) -> void:
 		"pillar": _eff_pillar(mv)
 		"orbit": _eff_orbit(mv)
 		"boomerang": _eff_boomerang(mv)
+		"drain_aoe": _eff_drain_aoe(mv)
+		"holy_nova": _eff_holy_nova(mv)
+		"line": _eff_line(mv)
+		"cloud": _eff_cloud(mv)
 
 
 func _telegraph(mv: Dictionary, t: float) -> void:
@@ -1240,6 +1266,8 @@ func _eff_debuff(mv: Dictionary) -> void:
 			"fear":
 				if e.has_method("apply_fear"):
 					e.apply_fear(dur)
+		if float(mv.get("dot", 0.0)) > 0.0 and e.has_method("apply_dot"):
+			e.apply_dot(float(mv["dot"]), dur)  # Entangling Vines: root + poison
 	_spawn_ring(aim + Vector3.UP * 0.2, radius, col, 18)
 
 
@@ -1268,6 +1296,9 @@ func _eff_shotgun(mv: Dictionary) -> void:
 		fb.life = 0.35  # short range
 		if slow_f > 0.0 and fb.has_method("set_on_hit"):
 			fb.set_on_hit(slow_f, float(mv.get("slow_dur", 2.0)), 0.0)
+		var pdot := float(mv.get("dot", 0.0))
+		if pdot > 0.0 and fb.has_method("set_dot"):
+			fb.set_dot(pdot, float(mv.get("dot_dur", 3.0)))  # Venom Spray
 	_spawn_burst(global_position + base * 1.0 + Vector3.UP * 1.2, 0.5, col, 6)
 
 
@@ -2123,6 +2154,89 @@ func _eff_boomerang(mv: Dictionary) -> void:
 		fb.set_motion(0.0, 0.0, true)
 	if fb.has_method("set_boomerang"):
 		fb.set_boomerang(float(mv.get("range", 10.0)))
+
+
+# ============================================================================
+#  Pass 6 effects — AoE drain / holy nova / pierce-line beam / following cloud
+# ============================================================================
+
+# Shadow: damage every enemy in radius and heal for each one struck (AoE lifesteal).
+func _eff_drain_aoe(mv: Dictionary) -> void:
+	var radius := float(mv.get("radius", 5.0))
+	var dmg := _amp(int(mv.get("dmg", 4)))
+	var heal_each := int(mv.get("heal_each", 4))
+	var col: Color = mv.get("color", SHADOW_COL)
+	var healed := 0
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if global_position.distance_to(e.global_position) <= radius:
+			if e.has_method("take_damage"):
+				e.take_damage(dmg)
+				healed += heal_each
+			_spawn_beam(e.global_position + Vector3.UP * 1.0, global_position + Vector3.UP * 1.0, col)
+	if healed > 0:
+		heal(healed)
+	_spawn_ring(global_position + Vector3.UP * 0.4, radius, col, 16)
+	_spawn_flash(global_position + Vector3.UP * 0.6, col, 2.5, radius * 1.6, 0.25)
+
+
+# Light: a radiant burst that damages nearby enemies AND heals the caster.
+func _eff_holy_nova(mv: Dictionary) -> void:
+	var radius := float(mv.get("radius", 4.5))
+	var dmg := _amp(int(mv.get("dmg", 5)))
+	var col: Color = mv.get("color", LIGHT_COL)
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if global_position.distance_to(e.global_position) <= radius and e.has_method("take_damage"):
+			e.take_damage(dmg)
+	heal(int(mv.get("heal", 20)))
+	_spawn_ring(global_position + Vector3.UP * 0.4, radius, col, 18)
+	_spawn_shockring(global_position, radius, col, 0.4)
+	_spawn_flash(global_position + Vector3.UP * 0.8, col, 4.0, radius * 2.0, 0.3)
+
+
+# Light: a piercing lance that damages EVERY enemy along the aim line (not just the
+# first, unlike Arc Sniper).
+func _eff_line(mv: Dictionary) -> void:
+	var rng := float(mv.get("range", 40.0))
+	var width := float(mv.get("width", 1.6))
+	var dmg := _amp(int(mv.get("dmg", 7)))
+	var col: Color = mv.get("color", LIGHT_COL)
+	var origin := global_position + Vector3.UP * 1.2
+	var dir := _aim_direction_3d()
+	for e in get_tree().get_nodes_in_group("enemies"):
+		var to_e: Vector3 = e.global_position + Vector3.UP * 1.0 - origin
+		var along := to_e.dot(dir)
+		if along < 0.0 or along > rng:
+			continue
+		if (to_e - dir * along).length() <= width:
+			if e.has_method("take_damage"):
+				e.take_damage(dmg)
+	_spawn_beam(origin, origin + dir * rng, col)
+	_spawn_beam(origin, origin + dir * rng, col)  # double layer for a thicker lance
+
+
+# Lightning: a storm cloud that chases the nearest enemy and zaps it repeatedly.
+func _eff_cloud(mv: Dictionary) -> void:
+	var strikes := int(mv.get("strikes", 7))
+	var rng := float(mv.get("range", 12.0))
+	var dmg := _amp(int(mv.get("dmg", 4)))
+	var interval := float(mv.get("interval", 0.5))
+	for s in range(strikes):
+		get_tree().create_timer(float(s) * interval).timeout.connect(func(): _cloud_tick(rng, dmg))
+
+
+func _cloud_tick(rng: float, dmg: int) -> void:
+	var best = null
+	var bd := INF
+	for e in get_tree().get_nodes_in_group("enemies"):
+		var d := global_position.distance_to(e.global_position)
+		if d < bd and d <= rng:
+			bd = d
+			best = e
+	if best == null:
+		return
+	if best.has_method("take_damage"):
+		best.take_damage(dmg)
+	_spawn_lightning_strike(best.global_position)
 
 
 # --- Ability VFX (brief code-only emissive primitives) ---
