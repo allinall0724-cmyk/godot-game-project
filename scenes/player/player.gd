@@ -1363,21 +1363,17 @@ func _eff_structure(mv: Dictionary) -> void:
 	shape.shape = bs
 	body.add_child(mesh)
 	body.add_child(shape)
-	get_tree().current_scene.add_child(body)
-
-	if kind == "platform":
-		body.global_position = pos + Vector3.UP * 2.2
-	else:
-		body.global_position = pos + Vector3.UP * (dims.y * 0.5)
-		body.look_at(body.global_position + dir, Vector3.UP)
-		if kind == "ramp":
-			body.rotate_object_local(Vector3.RIGHT, deg_to_rad(-22.0))
-
-	# Rise-from-ground spawn + auto-despawn.
-	var final_pos := body.global_position
-	body.global_position = final_pos - Vector3.UP * dims.y
-	var tw := body.create_tween()
-	tw.tween_property(body, "global_position", final_pos, 0.25)
+	# Orient BEFORE adding so we never call look_at on an in-tree physics body during
+	# the physics step (that can crash the physics engine). dir is horizontal -> safe.
+	var basis := Basis.IDENTITY
+	if kind != "platform" and dir.length() > 0.01:
+		basis = Basis.looking_at(dir, Vector3.UP)
+	if kind == "ramp":
+		basis = basis.rotated(basis.x.normalized(), deg_to_rad(-22.0))
+	var top_y := 2.2 if kind == "platform" else dims.y * 0.5
+	body.transform = Transform3D(basis, pos + Vector3.UP * top_y)
+	# Defer the add so the body registers outside the physics flush.
+	get_tree().current_scene.add_child.call_deferred(body)
 	get_tree().create_timer(life).timeout.connect(body.queue_free)
 
 

@@ -19,7 +19,7 @@ var slow_dur := 0.0
 var knock_force := 0.0
 
 # Motion modifiers.
-var gravity := 0.0         # downward accel; >0 makes the shot arc and drop
+var grav_accel := 0.0      # downward accel; >0 makes the shot arc and drop (Area3D has its own 'gravity')
 var homing := 0.0          # steer strength toward nearest enemy (0 = none)
 var trail_on := false
 
@@ -65,7 +65,7 @@ func set_on_hit(slow_f: float, slow_t: float, knock: float) -> void:
 
 ## Optional motion: gravity (arc/drop), homing strength, trail toggle.
 func set_motion(grav: float, home: float, trail: bool) -> void:
-	gravity = grav
+	grav_accel = grav
 	homing = home
 	trail_on = trail
 
@@ -82,8 +82,8 @@ func _physics_process(delta: float) -> void:
 		if t != null:
 			var want: Vector3 = (t.global_position + Vector3.UP * 0.8 - global_position).normalized()
 			_vel = _vel.lerp(want * _vel.length(), clampf(homing * delta, 0.0, 1.0))
-	if gravity > 0.0:
-		_vel += Vector3.DOWN * gravity * delta
+	if grav_accel > 0.0:
+		_vel += Vector3.DOWN * grav_accel * delta
 	global_position += _vel * delta
 
 	if trail_on:
