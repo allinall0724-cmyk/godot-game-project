@@ -1,96 +1,114 @@
 extends Node3D
-## Third-person camera controller.
+## Third-person orbit camera that follows a target node (the player on foot, or
+## the ship while sailing). It owns its own mouse-look so any pawn can be followed
+## without forwarding input. Swap who it follows with set_target().
 ##
-## Responsibilities:
-##   1. Mouse input: capture mouse motion and compute pitch/yaw
-##   2. Camera positioning: keep camera behind and above the player
-##   3. Smooth following: use lerp/easing to avoid jerky motion
-##
-## Mouse sensitivity is tunable. By default, the camera follows smoothly
-## but you can adjust the smoothness constants below.
+## Lives in the Main scene (not parented to the player) so that boarding the ship
+## is just "change the target", and so a single camera follows the LOCAL player in
+## multiplayer.
 
-# Mouse sensitivity (radians per pixel)
-const MOUSE_SENSITIVITY = 0.005
+var sensitivity := 0.005        # mouse look sensitivity (adjustable in Settings)
+const FOLLOW_DISTANCE := 4.5    # how far behind the target
+const FOLLOW_HEIGHT := 1.6      # how high above the target
+const LOOK_AT_HEIGHT := 0.8     # aim point above the target's origin
+const PITCH_MIN := -1.2         # ~-69 deg (looking down)
+const PITCH_MAX := 0.6          # ~+34 deg (looking up)
+const FOLLOW_SMOOTHNESS := 12.0 # higher = snappier
 
-# Smooth follow parameters
-const FOLLOW_SMOOTHNESS = 0.15  # 0-1: higher = faster, snappier (try 0.1-0.3)
-const FOLLOW_DISTANCE = 3.0  # How far behind the player
-const FOLLOW_HEIGHT = 1.2  # How high above the player
-
-# Camera angles
-var pitch: float = -0.3  # Looking slightly downward (radians)
-var yaw: float = 0.0    # Left-right (radians)
-
-# References
 @onready var camera_3d: Camera3D = $Camera3D
-@onready var player: CharacterBody3D = get_parent()
 
-# Input accumulation
-var mouse_delta: Vector2 = Vector2.ZERO
+var target: Node3D = null
+var pitch := -0.3
+var yaw := 0.0
+var _base_fov := 75.0
+
+
+func set_target(new_target: Node3D) -> void:
+	target = new_target
+
+
+## Scope-in for a charged shot (Arc Sniper): narrow the FOV, hold, then restore.
+func zoom_charge(hold: float) -> void:
+	var tw := create_tween()
+	tw.tween_property(camera_3d, "fov", _base_fov * 0.55, 0.16)
+	tw.tween_interval(maxf(0.0, hold))
+	tw.tween_property(camera_3d, "fov", _base_fov, 0.3)
 
 
 func _ready() -> void:
-	# Hide and capture mouse for a cleaner experience
-	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	
-	if not camera_3d:
-		push_error("CameraController: Camera3D child node not found!")
-
-
-func _physics_process(delta: float) -> void:
-	# Clamp pitch to prevent over-rotation (can't look fully behind)
-	pitch = clamp(pitch, -1.2, 0.8)  # ~-69° to +46°
-	
-	# Update camera position: offset behind and above the player
-	_update_camera_position()
-	
-	# Apply mouse input for next frame
-	mouse_delta = Vector2.ZERO
+	add_to_group("camera_rig")  # so the Settings menu can find us for sensitivity
+	_base_fov = camera_3d.fov
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Toggle mouse capture on ESC
-	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_ESCAPE:
-			if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-				Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-			else:
-				Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	# Mouse look (only while the mouse is captured)
+	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+		yaw -= event.relative.x * sensitivity
+		pitch -= event.relative.y * sensitivity
+		pitch = clamp(pitch, PITCH_MIN, PITCH_MAX)
 
 
-func _on_mouse_motion(event: InputEventMouseMotion) -> void:
-	"""Called by the player when mouse motion occurs."""
-	mouse_delta += event.relative * MOUSE_SENSITIVITY
-	
-	# Apply rotation
-	yaw -= mouse_delta.x
-	pitch -= mouse_delta.y
-	
-	mouse_delta = Vector2.ZERO  # Reset for next frame
+const COLLISION_MARGIN := 0.3   # keep the camera this far in front of a hit surface
+const GROUND_CLEARANCE := 0.5   # never let the camera sit closer than this to the ground
 
 
-func _update_camera_position() -> void:
-	"""
-	Position the camera behind and above the player, looking at them.
-	Uses smooth interpolation to avoid jerky movement.
-	"""
-	# Desired offset: behind (along -Z in camera space) and above
-	var camera_forward = Vector3(sin(yaw), sin(pitch), cos(yaw)).normalized()
-	var desired_offset = -camera_forward * FOLLOW_DISTANCE + Vector3.UP * FOLLOW_HEIGHT
-	
-	# Smooth interpolation for the offset
-	# (This makes the camera glide smoothly as you move/look)
-	global_position = player.global_position + desired_offset
-	
-	# Point the camera at a spot slightly above the player's center
-	look_at(player.global_position + Vector3.UP * 0.5, Vector3.UP)
+func _physics_process(delta: float) -> void:
+	if target == null:
+		return
+	var forward := get_forward_direction()
+	var pivot := target.global_position + Vector3.UP * LOOK_AT_HEIGHT
+	var desired := target.global_position - forward * FOLLOW_DISTANCE + Vector3.UP * FOLLOW_HEIGHT
+	# Pull the camera in if terrain/props would be between it and the player.
+	desired = _avoid_obstacles(pivot, desired)
+	# Smoothly glide to the desired position so target swaps aren't jarring.
+	global_position = global_position.lerp(desired, clamp(FOLLOW_SMOOTHNESS * delta, 0.0, 1.0))
+	# Hard clamp every frame so we never end up under the terrain mid-lerp.
+	global_position = _clamp_above_ground(global_position)
+	look_at(pivot, Vector3.UP)
 
 
+## RIDs to ignore in camera raycasts (the followed pawn's own collider).
+func _exclude_rids() -> Array[RID]:
+	var ex: Array[RID] = []
+	if target is CollisionObject3D:
+		ex.append(target.get_rid())
+	return ex
+
+
+## If something solid sits between the player (pivot) and the ideal camera spot,
+## move the camera to just in front of that surface so it never clips through.
+func _avoid_obstacles(pivot: Vector3, desired: Vector3) -> Vector3:
+	var space := get_world_3d().direct_space_state
+	var q := PhysicsRayQueryParameters3D.create(pivot, desired)
+	q.exclude = _exclude_rids()
+	var hit := space.intersect_ray(q)
+	if hit.has("position"):
+		var p: Vector3 = hit["position"]
+		var back := (pivot - desired).normalized()
+		return p + back * COLLISION_MARGIN
+	return desired
+
+
+## Keep the camera above the ground beneath it (cast straight down through the world).
+func _clamp_above_ground(pos: Vector3) -> Vector3:
+	var space := get_world_3d().direct_space_state
+	var from := Vector3(pos.x, 250.0, pos.z)
+	var to := Vector3(pos.x, -60.0, pos.z)
+	var q := PhysicsRayQueryParameters3D.create(from, to)
+	q.exclude = _exclude_rids()
+	var hit := space.intersect_ray(q)
+	if hit.has("position"):
+		var min_y: float = float(hit["position"].y) + GROUND_CLEARANCE
+		if pos.y < min_y:
+			pos.y = min_y
+	return pos
+
+
+## Horizontal-aware forward vector used by pawns for camera-relative movement.
 func get_forward_direction() -> Vector3:
-	"""Return the direction the camera is pointing (for player movement input)."""
 	return Vector3(sin(yaw), sin(pitch), cos(yaw)).normalized()
 
 
+## Rightward vector perpendicular to forward (for strafing).
 func get_right_direction() -> Vector3:
-	"""Return the rightward direction perpendicular to forward (for strafing)."""
 	return Vector3(cos(yaw), 0, -sin(yaw)).normalized()

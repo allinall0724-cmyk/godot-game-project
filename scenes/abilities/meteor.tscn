@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://dwr5pq1hm5m1u"]
+
+[ext_resource type="Script" path="res://scenes/abilities/meteor.gd" id="1_met"]
+
+[sub_resource type="SphereMesh" id="1_rock"]
+radius = 0.4
+height = 0.8
+
+[node name="Meteor" type="Node3D"]
+script = ExtResource("1_met")
+
+[node name="Rock" type="MeshInstance3D" parent="."]
+mesh = SubResource("1_rock")
+
+[node name="Light" type="OmniLight3D" parent="."]
+light_color = Color(1, 0.55, 0.2, 1)
+light_energy = 3.0
+omni_range = 5.0

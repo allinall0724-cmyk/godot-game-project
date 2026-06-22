@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://dn0villager01"]
+
+[ext_resource type="Script" path="res://scenes/characters/villager.gd" id="1_vil"]
+[ext_resource type="PackedScene" uid="uid://dn0humanoid01" path="res://scenes/characters/humanoid.tscn" id="2_humanoid"]
+
+[sub_resource type="CapsuleShape3D" id="3_vshape"]
+radius = 0.4
+height = 1.8
+
+[node name="Villager" type="CharacterBody3D"]
+script = ExtResource("1_vil")
+
+[node name="Humanoid" parent="." instance=ExtResource("2_humanoid")]
+skin_color = Color(0.9, 0.74, 0.6, 1)
+tunic_color = Color(0.55, 0.42, 0.28, 1)
+shorts_color = Color(0.35, 0.25, 0.15, 1)
+legs_color = Color(0.7, 0.6, 0.45, 1)
+boot_color = Color(0.3, 0.2, 0.12, 1)
+hair_color = Color(0.7, 0.55, 0.2, 1)
+hat_style = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("3_vshape")

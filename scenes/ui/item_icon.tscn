@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://dn0itemicon01"]
+
+[ext_resource type="Script" path="res://scenes/ui/item_icon.gd" id="1_icon"]
+
+[node name="ItemIcon" type="Control"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 3
+mouse_filter = 2
+script = ExtResource("1_icon")

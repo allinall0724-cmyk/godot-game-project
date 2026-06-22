@@ -1,0 +1,15 @@
+[gd_scene load_steps=2 format=3 uid="uid://dn0minimap001"]
+
+[ext_resource type="Script" path="res://scenes/ui/minimap.gd" id="1_mm"]
+
+[node name="Minimap" type="Control"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -180.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 204.0
+grow_horizontal = 0
+mouse_filter = 2
+script = ExtResource("1_mm")

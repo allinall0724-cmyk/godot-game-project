@@ -1,11 +1,243 @@
-[gd_scene load_steps=2 format=3 uid="uid://chwob76l3h8ax"]
+[gd_scene load_steps=21 format=3 uid="uid://chwob76l3h8ax"]
 
 [ext_resource type="PackedScene" uid="uid://bfx7t2cqq6i8" path="res://scenes/world/world.tscn" id="1_world"]
-[ext_resource type="PackedScene" uid="uid://b5yo6quvxj51r" path="res://scenes/player/player.tscn" id="1_player"]
+[ext_resource type="Script" path="res://main.gd" id="2_main"]
+[ext_resource type="PackedScene" uid="uid://b5yo6quvxj51r" path="res://scenes/player/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" uid="uid://dn0ship00001" path="res://scenes/ship/ship.tscn" id="4_ship"]
+[ext_resource type="PackedScene" uid="uid://dn0enemy0001" path="res://scenes/enemies/enemy.tscn" id="5_enemy"]
+[ext_resource type="Script" path="res://scenes/player/camera_controller.gd" id="6_cam"]
+[ext_resource type="PackedScene" uid="uid://dn0tree00001" path="res://scenes/props/tree.tscn" id="7_tree"]
+[ext_resource type="PackedScene" uid="uid://dn0rock00001" path="res://scenes/props/rock.tscn" id="8_rock"]
+[ext_resource type="PackedScene" uid="uid://dn0house0001" path="res://scenes/props/house.tscn" id="9_house"]
+[ext_resource type="PackedScene" uid="uid://dn0villager01" path="res://scenes/characters/villager.tscn" id="10_villager"]
+[ext_resource type="Script" path="res://scenes/ui/hud.gd" id="11_hud"]
+[ext_resource type="PackedScene" uid="uid://dn0chest00001" path="res://scenes/props/chest.tscn" id="12_chest"]
+[ext_resource type="PackedScene" uid="uid://dn0invui00001" path="res://scenes/ui/inventory_ui.tscn" id="13_inv"]
+[ext_resource type="PackedScene" uid="uid://dn0abilbar001" path="res://scenes/ui/ability_bar.tscn" id="14_abil"]
+[ext_resource type="PackedScene" uid="uid://dwx5p6uc2xm1u" path="res://scenes/ui/settings_menu.tscn" id="15_set"]
+[ext_resource type="PackedScene" uid="uid://dn0crosshair01" path="res://scenes/ui/crosshair.tscn" id="16_ch"]
+[ext_resource type="PackedScene" uid="uid://dn0minimap001" path="res://scenes/ui/minimap.tscn" id="17_mm"]
+[ext_resource type="PackedScene" uid="uid://dn0slime00001" path="res://scenes/enemies/slime.tscn" id="18_slime"]
+[ext_resource type="PackedScene" uid="uid://dn0wolf00001" path="res://scenes/enemies/wolf.tscn" id="19_wolf"]
+[ext_resource type="PackedScene" uid="uid://dn0skeleton01" path="res://scenes/enemies/skeleton.tscn" id="20_skel"]
 
-[node name="Main" type="Node3D" unique_id=1799138838]
+[node name="Main" type="Node3D"]
+script = ExtResource("2_main")
 
 [node name="World" parent="." instance=ExtResource("1_world")]
 
-[node name="Player" parent="World" instance=ExtResource("1_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+[node name="Player" parent="." instance=ExtResource("3_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="Goblin" parent="Enemies" instance=ExtResource("5_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 2, 4)
+
+[node name="Orc" parent="Enemies" instance=ExtResource("5_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 2, 2)
+max_health = 12
+wander_speed = 0.9
+chase_speed = 2.0
+attack_range = 2.1
+attack_damage = 15
+attack_cooldown = 1.8
+
+[node name="Humanoid" parent="Enemies/Orc" index="0"]
+skin_color = Color(0.34, 0.52, 0.26, 1)
+tunic_color = Color(0.3, 0.19, 0.11, 1)
+shorts_color = Color(0.26, 0.17, 0.1, 1)
+legs_color = Color(0.32, 0.5, 0.25, 1)
+boot_color = Color(0.2, 0.14, 0.09, 1)
+hair_color = Color(0.12, 0.16, 0.1, 1)
+hair_style = 3
+ear_style = 1
+ear_size = 1.2
+tusks = true
+tusk_size = 1.9
+bulk = 1.45
+
+[node name="Slime" parent="Enemies" instance=ExtResource("18_slime")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2, -3)
+
+[node name="Slime2" parent="Enemies" instance=ExtResource("18_slime")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 2, -4)
+
+[node name="Humanoid" parent="Enemies/Slime2" index="0"]
+slime_color = Color(0.35, 0.55, 1, 1)
+
+[node name="Wolf" parent="Enemies" instance=ExtResource("19_wolf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2, 5)
+
+[node name="Wolf2" parent="Enemies" instance=ExtResource("19_wolf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 2, 2)
+
+[node name="Humanoid" parent="Enemies/Wolf2" index="0"]
+fur_color = Color(0.55, 0.56, 0.6, 1)
+
+[node name="Skeleton" parent="Enemies" instance=ExtResource("20_skel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 2, 6)
+
+[node name="HubProps" type="Node3D" parent="."]
+
+[node name="Trees" type="Node3D" parent="HubProps"]
+
+[node name="Tree1" parent="HubProps/Trees" instance=ExtResource("7_tree")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.1, 3)
+
+[node name="Tree2" parent="HubProps/Trees" instance=ExtResource("7_tree")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 0.1, -2)
+
+[node name="Tree3" parent="HubProps/Trees" instance=ExtResource("7_tree")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.1, -14)
+
+[node name="Tree4" parent="HubProps/Trees" instance=ExtResource("7_tree")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.1, -12)
+
+[node name="Tree5" parent="HubProps/Trees" instance=ExtResource("7_tree")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.1, 14)
+
+[node name="Tree6" parent="HubProps/Trees" instance=ExtResource("7_tree")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.1, 13)
+
+[node name="Tree7" parent="HubProps/Trees" instance=ExtResource("7_tree")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0.1, -8)
+
+[node name="Tree8" parent="HubProps/Trees" instance=ExtResource("7_tree")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0.1, -9)
+
+[node name="Rocks" type="Node3D" parent="HubProps"]
+
+[node name="Rock1" parent="HubProps/Rocks" instance=ExtResource("8_rock")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.1, 8)
+
+[node name="Rock2" parent="HubProps/Rocks" instance=ExtResource("8_rock")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.1, 12)
+
+[node name="Rock3" parent="HubProps/Rocks" instance=ExtResource("8_rock")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.1, -16)
+
+[node name="Rock4" parent="HubProps/Rocks" instance=ExtResource("8_rock")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0.1, 8)
+
+[node name="Rock5" parent="HubProps/Rocks" instance=ExtResource("8_rock")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.1, -9)
+
+[node name="Rock6" parent="HubProps/Rocks" instance=ExtResource("8_rock")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.1, -15)
+
+[node name="Rock7" parent="HubProps/Rocks" instance=ExtResource("8_rock")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0.1, -13)
+
+[node name="Chest" parent="HubProps" instance=ExtResource("12_chest")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.1, -5)
+loot_set = "hub_armor"
+
+[node name="ChestArmory1" parent="HubProps" instance=ExtResource("12_chest")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.1, 5)
+loot_set = "armory1"
+
+[node name="ChestArmory2" parent="HubProps" instance=ExtResource("12_chest")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.1, 4)
+loot_set = "armory2"
+
+[node name="Village" type="Node3D" parent="HubProps"]
+
+[node name="House1" parent="HubProps/Village" instance=ExtResource("9_house")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.1, -6)
+
+[node name="House2" parent="HubProps/Village" instance=ExtResource("9_house")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.1, -11)
+
+[node name="House3" parent="HubProps/Village" instance=ExtResource("9_house")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 0.1, -11)
+
+[node name="Villagers" type="Node3D" parent="HubProps/Village"]
+
+[node name="Villager1" parent="HubProps/Village/Villagers" instance=ExtResource("10_villager")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 1.2, -8.5)
+
+[node name="Villager2" parent="HubProps/Village/Villagers" instance=ExtResource("10_villager")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 1.2, -9.5)
+
+[node name="Villager3" parent="HubProps/Village/Villagers" instance=ExtResource("10_villager")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 1.2, -8.5)
+
+[node name="ExtraChests" type="Node3D" parent="."]
+
+[node name="ChestRare" parent="ExtraChests" instance=ExtResource("12_chest")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.1, 8)
+loot_set = "island_rare"
+
+[node name="ChestEpic" parent="ExtraChests" instance=ExtResource("12_chest")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0.1, 10)
+loot_set = "island_epic"
+
+[node name="CameraController" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 6)
+script = ExtResource("6_cam")
+
+[node name="Camera3D" type="Camera3D" parent="CameraController"]
+current = true
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="HUD" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("11_hud")
+
+[node name="HealthBar" type="ProgressBar" parent="UI/HUD"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 280.0
+offset_bottom = 50.0
+mouse_filter = 2
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="Label" type="Label" parent="UI/HUD/HealthBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+text = "HP  100 / 100"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StaminaBar" type="ProgressBar" parent="UI/HUD"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 54.0
+offset_right = 280.0
+offset_bottom = 76.0
+mouse_filter = 2
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="Label" type="Label" parent="UI/HUD/StaminaBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+text = "STA  100 / 100"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Crosshair" parent="UI" instance=ExtResource("16_ch")]
+
+[node name="Minimap" parent="UI" instance=ExtResource("17_mm")]
+
+[node name="AbilityBar" parent="UI" instance=ExtResource("14_abil")]
+
+[node name="InventoryUI" parent="UI" instance=ExtResource("13_inv")]
+
+[node name="SettingsMenu" parent="UI" instance=ExtResource("15_set")]

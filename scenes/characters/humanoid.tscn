@@ -1,0 +1,230 @@
+[gd_scene load_steps=28 format=3 uid="uid://dn0humanoid01"]
+
+[ext_resource type="Script" path="res://scenes/characters/humanoid.gd" id="1_hum"]
+
+[sub_resource type="BoxMesh" id="1_torso"]
+size = Vector3(0.5, 0.6, 0.28)
+
+[sub_resource type="BoxMesh" id="2_shorts"]
+size = Vector3(0.44, 0.26, 0.32)
+
+[sub_resource type="SphereMesh" id="3_head"]
+radius = 0.17
+height = 0.34
+
+[sub_resource type="BoxMesh" id="4_hair"]
+size = Vector3(0.38, 0.15, 0.4)
+
+[sub_resource type="BoxMesh" id="22_hairback"]
+size = Vector3(0.36, 0.22, 0.14)
+
+[sub_resource type="BoxMesh" id="23_hairfringe"]
+size = Vector3(0.34, 0.07, 0.08)
+
+[sub_resource type="BoxMesh" id="24_strand"]
+size = Vector3(0.08, 0.2, 0.08)
+
+[sub_resource type="BoxMesh" id="25_crest"]
+size = Vector3(0.06, 0.16, 0.34)
+
+[sub_resource type="CylinderMesh" id="26_horn"]
+top_radius = 0.0
+bottom_radius = 0.05
+height = 0.2
+
+[sub_resource type="BoxMesh" id="5_arm"]
+size = Vector3(0.12, 0.6, 0.14)
+
+[sub_resource type="BoxMesh" id="6_leg"]
+size = Vector3(0.16, 0.8, 0.18)
+
+[sub_resource type="BoxMesh" id="7_boot"]
+size = Vector3(0.2, 0.18, 0.3)
+
+[sub_resource type="BoxMesh" id="8_eye"]
+size = Vector3(0.05, 0.06, 0.04)
+
+[sub_resource type="BoxMesh" id="9_mouth"]
+size = Vector3(0.09, 0.025, 0.03)
+
+[sub_resource type="StandardMaterial3D" id="10_face"]
+albedo_color = Color(0.1, 0.08, 0.07, 1)
+
+[sub_resource type="BoxMesh" id="11_belt"]
+size = Vector3(0.54, 0.09, 0.32)
+
+[sub_resource type="StandardMaterial3D" id="12_beltmat"]
+albedo_color = Color(0.3, 0.18, 0.08, 1)
+
+[sub_resource type="BoxMesh" id="13_buckle"]
+size = Vector3(0.09, 0.07, 0.03)
+
+[sub_resource type="StandardMaterial3D" id="14_bucklemat"]
+albedo_color = Color(0.82, 0.66, 0.2, 1)
+metallic = 0.6
+roughness = 0.4
+
+[sub_resource type="SphereMesh" id="15_dome"]
+radius = 0.2
+height = 0.4
+
+[sub_resource type="BoxMesh" id="16_brim"]
+size = Vector3(0.46, 0.05, 0.46)
+
+[sub_resource type="BoxMesh" id="17_nose"]
+size = Vector3(0.05, 0.2, 0.06)
+
+[sub_resource type="BoxMesh" id="18_plate"]
+size = Vector3(0.54, 0.5, 0.32)
+
+[sub_resource type="BoxMesh" id="19_shoulder"]
+size = Vector3(0.18, 0.14, 0.32)
+
+[sub_resource type="BoxMesh" id="20_greave"]
+size = Vector3(0.2, 0.5, 0.22)
+
+[sub_resource type="StandardMaterial3D" id="21_armormat"]
+albedo_color = Color(0.6, 0.62, 0.68, 1)
+metallic = 0.5
+roughness = 0.4
+
+[node name="Humanoid" type="Node3D"]
+script = ExtResource("1_hum")
+
+[node name="Torso" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+mesh = SubResource("1_torso")
+
+[node name="Shorts" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+mesh = SubResource("2_shorts")
+
+[node name="Belt" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0, 0)
+mesh = SubResource("11_belt")
+surface_material_override/0 = SubResource("12_beltmat")
+
+[node name="Buckle" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0, -0.165)
+mesh = SubResource("13_buckle")
+surface_material_override/0 = SubResource("14_bucklemat")
+
+[node name="ChestArmor" type="Node3D" parent="."]
+visible = false
+
+[node name="Plate" type="MeshInstance3D" parent="ChestArmor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.22, 0)
+mesh = SubResource("18_plate")
+surface_material_override/0 = SubResource("21_armormat")
+
+[node name="ShoulderL" type="MeshInstance3D" parent="ChestArmor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.27, 0.46, 0)
+mesh = SubResource("19_shoulder")
+surface_material_override/0 = SubResource("21_armormat")
+
+[node name="ShoulderR" type="MeshInstance3D" parent="ChestArmor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.27, 0.46, 0)
+mesh = SubResource("19_shoulder")
+surface_material_override/0 = SubResource("21_armormat")
+
+[node name="Head" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.62, 0)
+mesh = SubResource("3_head")
+
+[node name="EyeL" type="MeshInstance3D" parent="Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.06, 0.02, -0.15)
+mesh = SubResource("8_eye")
+surface_material_override/0 = SubResource("10_face")
+
+[node name="EyeR" type="MeshInstance3D" parent="Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.06, 0.02, -0.15)
+mesh = SubResource("8_eye")
+surface_material_override/0 = SubResource("10_face")
+
+[node name="Mouth" type="MeshInstance3D" parent="Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.07, -0.155)
+mesh = SubResource("9_mouth")
+surface_material_override/0 = SubResource("10_face")
+
+[node name="Helmet" type="Node3D" parent="Head"]
+visible = false
+
+[node name="Dome" type="MeshInstance3D" parent="Head/Helmet"]
+transform = Transform3D(1.1, 0, 0, 0, 0.6, 0, 0, 0, 1.1, 0, 0.13, 0)
+mesh = SubResource("15_dome")
+surface_material_override/0 = SubResource("21_armormat")
+
+[node name="Brim" type="MeshInstance3D" parent="Head/Helmet"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, 0)
+mesh = SubResource("16_brim")
+surface_material_override/0 = SubResource("21_armormat")
+
+[node name="Crest" type="MeshInstance3D" parent="Head/Helmet"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.22, 0.02)
+mesh = SubResource("25_crest")
+surface_material_override/0 = SubResource("21_armormat")
+
+[node name="HornL" type="MeshInstance3D" parent="Head/Helmet"]
+transform = Transform3D(0.94, 0.34, 0, -0.34, 0.94, 0, 0, 0, 1, -0.16, 0.16, 0)
+mesh = SubResource("26_horn")
+surface_material_override/0 = SubResource("21_armormat")
+visible = false
+
+[node name="HornR" type="MeshInstance3D" parent="Head/Helmet"]
+transform = Transform3D(0.94, -0.34, 0, 0.34, 0.94, 0, 0, 0, 1, 0.16, 0.16, 0)
+mesh = SubResource("26_horn")
+surface_material_override/0 = SubResource("21_armormat")
+visible = false
+
+[node name="Hair" type="Node3D" parent="."]
+
+[node name="ArmL_Pivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.31, 0.45, 0)
+
+[node name="ArmL" type="MeshInstance3D" parent="ArmL_Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+mesh = SubResource("5_arm")
+
+[node name="ArmR_Pivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.31, 0.45, 0)
+
+[node name="ArmR" type="MeshInstance3D" parent="ArmR_Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+mesh = SubResource("5_arm")
+
+[node name="Hand" type="Node3D" parent="ArmR_Pivot"]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.866, 0, -0.866, 0.5, 0, -0.58, -0.16)
+
+[node name="LegL_Pivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12, -0.1, 0)
+
+[node name="LegL" type="MeshInstance3D" parent="LegL_Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, 0)
+mesh = SubResource("6_leg")
+
+[node name="BootL" type="MeshInstance3D" parent="LegL_Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.78, 0.04)
+mesh = SubResource("7_boot")
+
+[node name="GreaveL" type="MeshInstance3D" parent="LegL_Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.32, 0)
+mesh = SubResource("20_greave")
+surface_material_override/0 = SubResource("21_armormat")
+visible = false
+
+[node name="LegR_Pivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, -0.1, 0)
+
+[node name="LegR" type="MeshInstance3D" parent="LegR_Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, 0)
+mesh = SubResource("6_leg")
+
+[node name="BootR" type="MeshInstance3D" parent="LegR_Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.78, 0.04)
+mesh = SubResource("7_boot")
+
+[node name="GreaveR" type="MeshInstance3D" parent="LegR_Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.32, 0)
+mesh = SubResource("20_greave")
+surface_material_override/0 = SubResource("21_armormat")
+visible = false

@@ -1,0 +1,80 @@
+[gd_scene load_steps=11 format=3 uid="uid://dn0chest00001"]
+
+[ext_resource type="Script" path="res://scenes/props/chest.gd" id="1_chest"]
+
+[sub_resource type="BoxMesh" id="1_base"]
+size = Vector3(0.9, 0.6, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="2_basemat"]
+albedo_color = Color(0.45, 0.3, 0.15, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="3_lid"]
+size = Vector3(0.92, 0.18, 0.62)
+
+[sub_resource type="StandardMaterial3D" id="4_lidmat"]
+albedo_color = Color(0.33, 0.21, 0.1, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="5_band"]
+size = Vector3(0.94, 0.08, 0.64)
+
+[sub_resource type="StandardMaterial3D" id="6_metalmat"]
+albedo_color = Color(0.2, 0.2, 0.22, 1)
+metallic = 0.7
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="7_lock"]
+size = Vector3(0.12, 0.16, 0.06)
+
+[sub_resource type="StandardMaterial3D" id="8_lockmat"]
+albedo_color = Color(0.82, 0.66, 0.2, 1)
+metallic = 0.6
+roughness = 0.4
+
+[sub_resource type="BoxShape3D" id="9_colshape"]
+size = Vector3(0.9, 0.85, 0.6)
+
+[sub_resource type="SphereShape3D" id="10_interact"]
+radius = 2.2
+
+[node name="Chest" type="StaticBody3D"]
+script = ExtResource("1_chest")
+
+[node name="Base" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+mesh = SubResource("1_base")
+surface_material_override/0 = SubResource("2_basemat")
+
+[node name="Band1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.16, 0)
+mesh = SubResource("5_band")
+surface_material_override/0 = SubResource("6_metalmat")
+
+[node name="Band2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.46, 0)
+mesh = SubResource("5_band")
+surface_material_override/0 = SubResource("6_metalmat")
+
+[node name="Lock" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.56, 0.31)
+mesh = SubResource("7_lock")
+surface_material_override/0 = SubResource("8_lockmat")
+
+[node name="Lid" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, -0.3)
+
+[node name="LidMesh" type="MeshInstance3D" parent="Lid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09, 0.3)
+mesh = SubResource("3_lid")
+surface_material_override/0 = SubResource("4_lidmat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.42, 0)
+shape = SubResource("9_colshape")
+
+[node name="InteractArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+shape = SubResource("10_interact")

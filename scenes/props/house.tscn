@@ -1,0 +1,144 @@
+[gd_scene load_steps=18 format=3 uid="uid://dn0house0001"]
+
+[sub_resource type="BoxMesh" id="1_foundation"]
+size = Vector3(4.3, 0.25, 4.3)
+
+[sub_resource type="StandardMaterial3D" id="2_stonemat"]
+albedo_color = Color(0.5, 0.49, 0.46, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="3_wallmat"]
+albedo_color = Color(0.72, 0.58, 0.4, 1)
+
+[sub_resource type="BoxMesh" id="4_backwall"]
+size = Vector3(4, 2.5, 0.2)
+
+[sub_resource type="BoxMesh" id="5_sidewall"]
+size = Vector3(0.2, 2.5, 4)
+
+[sub_resource type="BoxMesh" id="6_frontseg"]
+size = Vector3(1.4, 2.5, 0.2)
+
+[sub_resource type="BoxMesh" id="7_lintel"]
+size = Vector3(1.2, 0.5, 0.2)
+
+[sub_resource type="CylinderMesh" id="8_roof"]
+top_radius = 0.0
+bottom_radius = 3.0
+height = 1.8
+radial_segments = 4
+
+[sub_resource type="StandardMaterial3D" id="9_roofmat"]
+albedo_color = Color(0.45, 0.2, 0.15, 1)
+
+[sub_resource type="BoxMesh" id="10_window"]
+size = Vector3(0.08, 0.6, 0.7)
+
+[sub_resource type="StandardMaterial3D" id="11_windowmat"]
+albedo_color = Color(0.2, 0.28, 0.35, 1)
+metallic = 0.3
+roughness = 0.2
+
+[sub_resource type="BoxShape3D" id="12_backshape"]
+size = Vector3(4, 2.5, 0.2)
+
+[sub_resource type="BoxShape3D" id="13_sideshape"]
+size = Vector3(0.2, 2.5, 4)
+
+[sub_resource type="BoxShape3D" id="14_frontshape"]
+size = Vector3(1.4, 2.5, 0.2)
+
+[sub_resource type="BoxShape3D" id="15_lintelshape"]
+size = Vector3(1.2, 0.5, 0.2)
+
+[sub_resource type="BoxMesh" id="16_chimney"]
+size = Vector3(0.5, 1.6, 0.5)
+
+[sub_resource type="BoxMesh" id="17_chimcap"]
+size = Vector3(0.62, 0.16, 0.62)
+
+[node name="House" type="StaticBody3D"]
+
+[node name="Foundation" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+mesh = SubResource("1_foundation")
+surface_material_override/0 = SubResource("2_stonemat")
+
+[node name="BackWall" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -2)
+mesh = SubResource("4_backwall")
+surface_material_override/0 = SubResource("3_wallmat")
+
+[node name="BackWallCol" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -2)
+shape = SubResource("12_backshape")
+
+[node name="LeftWall" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.25, 0)
+mesh = SubResource("5_sidewall")
+surface_material_override/0 = SubResource("3_wallmat")
+
+[node name="LeftWallCol" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.25, 0)
+shape = SubResource("13_sideshape")
+
+[node name="RightWall" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.25, 0)
+mesh = SubResource("5_sidewall")
+surface_material_override/0 = SubResource("3_wallmat")
+
+[node name="RightWallCol" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.25, 0)
+shape = SubResource("13_sideshape")
+
+[node name="FrontLeft" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 1.25, 2)
+mesh = SubResource("6_frontseg")
+surface_material_override/0 = SubResource("3_wallmat")
+
+[node name="FrontLeftCol" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 1.25, 2)
+shape = SubResource("14_frontshape")
+
+[node name="FrontRight" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 1.25, 2)
+mesh = SubResource("6_frontseg")
+surface_material_override/0 = SubResource("3_wallmat")
+
+[node name="FrontRightCol" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 1.25, 2)
+shape = SubResource("14_frontshape")
+
+[node name="Lintel" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 2)
+mesh = SubResource("7_lintel")
+surface_material_override/0 = SubResource("3_wallmat")
+
+[node name="LintelCol" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 2)
+shape = SubResource("15_lintelshape")
+
+[node name="WindowL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.04, 1.5, 0)
+mesh = SubResource("10_window")
+surface_material_override/0 = SubResource("11_windowmat")
+
+[node name="WindowR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.04, 1.5, 0)
+mesh = SubResource("10_window")
+surface_material_override/0 = SubResource("11_windowmat")
+
+[node name="Roof" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.707, 0, -0.707, 0, 1, 0, 0.707, 0, 0.707, 0, 3.4, 0)
+mesh = SubResource("8_roof")
+surface_material_override/0 = SubResource("9_roofmat")
+
+[node name="Chimney" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1, 3.4, -1.1)
+mesh = SubResource("16_chimney")
+surface_material_override/0 = SubResource("2_stonemat")
+
+[node name="ChimneyCap" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1, 4.25, -1.1)
+mesh = SubResource("17_chimcap")
+surface_material_override/0 = SubResource("2_stonemat")

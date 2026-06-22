@@ -1,0 +1,28 @@
+[gd_scene load_steps=4 format=3 uid="uid://dn0enemy0001"]
+
+[ext_resource type="Script" path="res://scenes/enemies/enemy.gd" id="1_enemy"]
+[ext_resource type="PackedScene" uid="uid://dn0humanoid01" path="res://scenes/characters/humanoid.tscn" id="2_humanoid"]
+
+[sub_resource type="CapsuleShape3D" id="3_eshape"]
+radius = 0.4
+height = 1.8
+
+[node name="Enemy" type="CharacterBody3D"]
+script = ExtResource("1_enemy")
+
+; Default look = GOBLIN (small, green, ragged). The Orc variant overrides these
+; colors per-instance in the scene (see node_3d.tscn).
+[node name="Humanoid" parent="." instance=ExtResource("2_humanoid")]
+skin_color = Color(0.5, 0.72, 0.32, 1)
+tunic_color = Color(0.4, 0.28, 0.16, 1)
+shorts_color = Color(0.3, 0.22, 0.14, 1)
+legs_color = Color(0.46, 0.66, 0.3, 1)
+boot_color = Color(0.22, 0.16, 0.1, 1)
+hair_color = Color(0.22, 0.26, 0.14, 1)
+hair_style = 2
+ear_style = 1
+ear_size = 1.7
+bulk = 0.82
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("3_eshape")

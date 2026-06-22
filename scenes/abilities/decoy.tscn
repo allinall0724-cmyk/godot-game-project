@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dn0decoy00001"]
+
+[ext_resource type="Script" path="res://scenes/abilities/decoy.gd" id="1_dec"]
+
+[node name="Decoy" type="Node3D"]
+script = ExtResource("1_dec")

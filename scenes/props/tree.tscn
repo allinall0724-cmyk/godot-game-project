@@ -1,0 +1,54 @@
+[gd_scene load_steps=9 format=3 uid="uid://dn0tree00001"]
+
+[ext_resource type="Script" path="res://scenes/props/prop_variation.gd" id="1_var"]
+
+[sub_resource type="CylinderMesh" id="1_trunk"]
+top_radius = 0.22
+bottom_radius = 0.3
+height = 2.2
+
+[sub_resource type="StandardMaterial3D" id="2_trunkmat"]
+albedo_color = Color(0.4, 0.26, 0.13, 1)
+roughness = 0.95
+
+[sub_resource type="CylinderMesh" id="3_canopy"]
+top_radius = 0.0
+bottom_radius = 1.6
+height = 2.0
+
+[sub_resource type="StandardMaterial3D" id="4_canopymat"]
+albedo_color = Color(0.13, 0.4, 0.16, 1)
+
+[sub_resource type="CylinderMesh" id="5_canopy2"]
+top_radius = 0.0
+bottom_radius = 1.1
+height = 1.6
+
+[sub_resource type="StandardMaterial3D" id="6_canopy2mat"]
+albedo_color = Color(0.22, 0.52, 0.24, 1)
+
+[sub_resource type="CylinderShape3D" id="7_trunkshape"]
+height = 2.2
+radius = 0.35
+
+[node name="Tree" type="StaticBody3D"]
+script = ExtResource("1_var")
+
+[node name="Trunk" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+mesh = SubResource("1_trunk")
+surface_material_override/0 = SubResource("2_trunkmat")
+
+[node name="Canopy" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.9, 0)
+mesh = SubResource("3_canopy")
+surface_material_override/0 = SubResource("4_canopymat")
+
+[node name="Canopy2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.0, 0)
+mesh = SubResource("5_canopy2")
+surface_material_override/0 = SubResource("6_canopy2mat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+shape = SubResource("7_trunkshape")

@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=3 uid="uid://dn0avatar0001"]
+
+[ext_resource type="Script" path="res://scenes/net/player_avatar.gd" id="1_avatar"]
+
+[sub_resource type="CapsuleMesh" id="1_amesh"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="2_amat"]
+albedo_color = Color(0.95, 0.55, 0.1, 1)
+
+[sub_resource type="SceneReplicationConfig" id="3_repl"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+
+[node name="Avatar" type="Node3D"]
+script = ExtResource("1_avatar")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("1_amesh")
+surface_material_override/0 = SubResource("2_amat")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+root_path = NodePath("..")
+replication_config = SubResource("3_repl")

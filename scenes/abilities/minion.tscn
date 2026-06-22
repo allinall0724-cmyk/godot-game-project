@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dn0minion0001"]
+
+[ext_resource type="Script" path="res://scenes/abilities/minion.gd" id="1_min"]
+
+[node name="Minion" type="Node3D"]
+script = ExtResource("1_min")

@@ -1,0 +1,38 @@
+[gd_scene load_steps=7 format=3 uid="uid://dn0ship00001"]
+
+[ext_resource type="Script" path="res://scenes/ship/ship.gd" id="1_ship"]
+
+[sub_resource type="BoxMesh" id="1_hull"]
+size = Vector3(4, 1, 9)
+
+[sub_resource type="StandardMaterial3D" id="2_hullmat"]
+albedo_color = Color(0.45, 0.27, 0.13, 1)
+
+[sub_resource type="BoxMesh" id="3_bow"]
+size = Vector3(2.5, 0.8, 2)
+
+[sub_resource type="BoxShape3D" id="4_hullshape"]
+size = Vector3(4, 1, 9)
+
+[sub_resource type="SphereShape3D" id="5_boardshape"]
+radius = 6.0
+
+[node name="Ship" type="CharacterBody3D"]
+script = ExtResource("1_ship")
+
+[node name="Hull" type="MeshInstance3D" parent="."]
+mesh = SubResource("1_hull")
+surface_material_override/0 = SubResource("2_hullmat")
+
+[node name="Bow" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, -5)
+mesh = SubResource("3_bow")
+surface_material_override/0 = SubResource("2_hullmat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("4_hullshape")
+
+[node name="BoardArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BoardArea"]
+shape = SubResource("5_boardshape")

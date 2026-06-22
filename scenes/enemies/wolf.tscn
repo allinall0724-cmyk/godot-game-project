@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://dn0wolf00001"]
+
+[ext_resource type="Script" path="res://scenes/enemies/enemy.gd" id="1_enemy"]
+[ext_resource type="Script" path="res://scenes/enemies/wolf_body.gd" id="2_wolf"]
+
+[sub_resource type="BoxShape3D" id="1_wshape"]
+size = Vector3(0.5, 0.9, 1.2)
+
+[node name="Wolf" type="CharacterBody3D"]
+script = ExtResource("1_enemy")
+max_health = 5
+wander_speed = 1.6
+chase_speed = 4.2
+detect_range = 16.0
+attack_range = 1.8
+attack_damage = 7
+attack_cooldown = 1.0
+
+[node name="Humanoid" type="Node3D" parent="."]
+script = ExtResource("2_wolf")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+shape = SubResource("1_wshape")

@@ -1,8 +1,13 @@
 extends Node3D
-## World setup: ground plane, lighting, environment.
-## This is where you'll add static geometry, enemies, NPCs, etc. later.
+## World setup: water plane, islands, lighting, environment.
+##
+## Static geometry only — gameplay actors (player, ship, enemies) live in Main.
+##
+## To add another island later, follow the pattern under the "Islands" node:
+##   1. Add a StaticBody3D named "IslandN" under Islands.
+##   2. Give it a MeshInstance3D (CylinderMesh) + a CollisionShape3D (CylinderShape3D)
+##      with matching radius/height, positioned so the top sits just above y=0.
+##   3. Move it somewhere out on the water. That's it — no code changes needed.
 
 func _ready() -> void:
-	# Set up basic lighting and environment if not already done in the scene
-	# For now, the scene handles it via editor-placed nodes
 	pass

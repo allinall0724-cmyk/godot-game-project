@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://dn0slime00001"]
+
+[ext_resource type="Script" path="res://scenes/enemies/enemy.gd" id="1_enemy"]
+[ext_resource type="Script" path="res://scenes/enemies/slime_body.gd" id="2_slime"]
+
+[sub_resource type="SphereShape3D" id="1_sshape"]
+radius = 0.42
+
+[node name="Slime" type="CharacterBody3D"]
+script = ExtResource("1_enemy")
+max_health = 5
+wander_speed = 1.0
+chase_speed = 2.2
+attack_range = 1.5
+attack_damage = 6
+attack_cooldown = 1.0
+
+[node name="Humanoid" type="Node3D" parent="."]
+script = ExtResource("2_slime")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.42, 0)
+shape = SubResource("1_sshape")

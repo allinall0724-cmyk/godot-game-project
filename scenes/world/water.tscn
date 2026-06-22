@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://dn0water00001"]
+
+; PRESERVED, CURRENTLY UNUSED. This is the old water plane + collider from when the
+; world was an island + ocean. It is NOT in the active scene anymore (terrain
+; replaced it). To bring sailing back, instance this under Main in node_3d.tscn and
+; re-add the Ship node (scenes/ship/ship.tscn).
+
+[sub_resource type="BoxMesh" id="1_watermesh"]
+size = Vector3(500, 1, 500)
+
+[sub_resource type="StandardMaterial3D" id="2_watermat"]
+albedo_color = Color(0.1, 0.45, 0.55, 1)
+metallic = 0.2
+roughness = 0.3
+
+[sub_resource type="BoxShape3D" id="3_watershape"]
+size = Vector3(500, 1, 500)
+
+[node name="Water" type="Node3D"]
+
+[node name="WaterMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+mesh = SubResource("1_watermesh")
+surface_material_override/0 = SubResource("2_watermat")
+
+[node name="WaterBody" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WaterBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("3_watershape")
