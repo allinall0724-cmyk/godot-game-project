@@ -20,27 +20,27 @@ var opened := false
 # and spells are equipped separately (not looted as weapons yet).
 const LOOT_SETS := {
 	"hub_armor": [
-		{"name": "Iron Helmet", "rarity": "Common", "tier": 1, "edition": 1, "slot": "helmet", "color": Color(0.6, 0.62, 0.68), "move_mod": -0.2},
+		{"name": "Iron Helmet", "rarity": "Common", "tier": 1, "edition": 1, "slot": "helmet", "model": "great_helm", "color": Color(0.6, 0.62, 0.68), "move_mod": -0.2, "health_bonus": 12},
 		{"name": "Gold Coin", "rarity": "Common", "tier": 1, "edition": 1, "slot": "", "color": Color(0.9, 0.75, 0.2)},
 	],
 	"island_rare": [
-		{"name": "Leather Tunic", "rarity": "Uncommon", "tier": 2, "edition": 4, "slot": "chest", "color": Color(0.45, 0.3, 0.18), "move_mod": -0.3},
+		{"name": "Leather Tunic", "rarity": "Uncommon", "tier": 2, "edition": 4, "slot": "chest", "model": "leather", "color": Color(0.45, 0.3, 0.18), "move_mod": -0.1, "health_bonus": 16},
 		{"name": "Silver Coin", "rarity": "Uncommon", "tier": 2, "edition": 3, "slot": "", "color": Color(0.8, 0.8, 0.85)},
 	],
 	"island_epic": [
-		{"name": "Knight Helmet", "rarity": "Rare", "tier": 3, "edition": 2, "slot": "helmet", "color": Color(0.45, 0.5, 0.62), "move_mod": -0.3},
-		{"name": "Iron Greaves", "rarity": "Rare", "tier": 3, "edition": 5, "slot": "legs", "color": Color(0.5, 0.52, 0.58), "move_mod": -0.4, "jump_mod": -0.8},
+		{"name": "Knight Helmet", "rarity": "Rare", "tier": 3, "edition": 2, "slot": "helmet", "model": "barbute", "color": Color(0.45, 0.5, 0.62), "move_mod": -0.3, "health_bonus": 22},
+		{"name": "Iron Greaves", "rarity": "Rare", "tier": 3, "edition": 5, "slot": "legs", "model": "greaves", "color": Color(0.5, 0.52, 0.58), "move_mod": -0.4, "jump_mod": -0.8, "health_bonus": 18},
 	],
 	# Extra gear variety for testing (distinct colors + stat trade-offs).
 	"armory1": [
-		{"name": "Bronze Helm", "rarity": "Common", "tier": 1, "edition": 12, "slot": "helmet", "color": Color(0.7, 0.5, 0.25), "move_mod": -0.15},
-		{"name": "Cloth Robe", "rarity": "Common", "tier": 1, "edition": 40, "slot": "chest", "color": Color(0.45, 0.25, 0.5), "move_mod": -0.1},
-		{"name": "Padded Legs", "rarity": "Common", "tier": 1, "edition": 33, "slot": "legs", "color": Color(0.4, 0.3, 0.2), "move_mod": -0.2},
+		{"name": "Bronze Helm", "rarity": "Common", "tier": 1, "edition": 12, "slot": "helmet", "model": "cap", "color": Color(0.7, 0.5, 0.25), "health_bonus": 8},
+		{"name": "Cloth Robe", "rarity": "Common", "tier": 1, "edition": 40, "slot": "chest", "model": "robe", "color": Color(0.45, 0.25, 0.5), "stamina_bonus": 18.0, "regen_bonus": 4.0},
+		{"name": "Padded Legs", "rarity": "Common", "tier": 1, "edition": 33, "slot": "legs", "model": "padded", "color": Color(0.4, 0.3, 0.2), "health_bonus": 12, "stamina_bonus": 6.0},
 	],
 	"armory2": [
-		{"name": "Gilded Helm", "rarity": "Epic", "tier": 4, "edition": 4, "slot": "helmet", "color": Color(0.85, 0.7, 0.3), "move_mod": -0.25, "health_bonus": 30, "horns": true},
-		{"name": "Plate Cuirass", "rarity": "Epic", "tier": 4, "edition": 6, "slot": "chest", "color": Color(0.6, 0.62, 0.7), "move_mod": -0.5, "regen_bonus": 8.0},
-		{"name": "Plate Greaves", "rarity": "Epic", "tier": 4, "edition": 9, "slot": "legs", "color": Color(0.6, 0.62, 0.7), "move_mod": -0.5, "jump_mod": -1.0, "health_bonus": 15},
+		{"name": "Gilded Helm", "rarity": "Epic", "tier": 4, "edition": 4, "slot": "helmet", "model": "horned", "color": Color(0.85, 0.7, 0.3), "move_mod": -0.25, "health_bonus": 30},
+		{"name": "Plate Cuirass", "rarity": "Epic", "tier": 4, "edition": 6, "slot": "chest", "model": "ornate_plate", "color": Color(0.6, 0.62, 0.7), "move_mod": -0.5, "health_bonus": 50, "jump_mod": -0.6},
+		{"name": "Plate Greaves", "rarity": "Epic", "tier": 4, "edition": 9, "slot": "legs", "model": "plate_legs", "color": Color(0.6, 0.62, 0.7), "move_mod": -0.5, "jump_mod": -1.0, "health_bonus": 25},
 	],
 }
 

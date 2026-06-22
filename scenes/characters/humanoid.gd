@@ -269,50 +269,307 @@ func attach_to_hand(item: Node3D) -> void:
 	hand.add_child(item)
 
 
-## Visibly reflect equipped armor on the model by showing/tinting dedicated armor
-## meshes (helmet, chestplate, greaves). `equipment` is the player's equipment dict;
-## items may carry a "color".
+# === Procedural armor ===================================================
+# Armor is BUILT from primitives per the item's "model" id, not just tinted, so
+# different helmets/chests/pants have genuinely different silhouettes. Each
+# apply_equipment() clears the slot container and rebuilds it for the current item.
+const ARMOR_DEFAULT := Color(0.60, 0.62, 0.68)
+const ACCENT_GOLD := Color(0.85, 0.72, 0.28)
+const DARKSLOT := Color(0.07, 0.07, 0.09)   # eye slits / openings
+const BONE_COL := Color(0.90, 0.87, 0.78)
+# Open-topped helmets that should still show the character's hair.
+const HAIR_OK_MODELS := ["circlet", "crown", "winged"]
+
+
+## Rebuild the visible armor (helmet / chest / per-leg) from the equipment dict.
+## Each item picks its shape via "model"; "color" tints it. Called on equip and by
+## the inventory preview.
 func apply_equipment(equipment: Dictionary) -> void:
 	var helmet = equipment.get("helmet")
-	helmet_node.visible = helmet != null
-	# Hide hair under a helmet so it doesn't poke through.
-	hair_node.visible = helmet == null
-	# Shape variant: some helmets have horns.
-	var has_horns: bool = helmet != null and bool(helmet.get("horns", false))
-	var horn_l = helmet_node.get_node_or_null("HornL")
-	var horn_r = helmet_node.get_node_or_null("HornR")
-	if horn_l != null:
-		horn_l.visible = has_horns
-	if horn_r != null:
-		horn_r.visible = has_horns
-	if helmet != null:
-		_tint_group(helmet_node, helmet.get("color", Color(0.6, 0.62, 0.68)))
-
 	var chest = equipment.get("chest")
+	var legs = equipment.get("legs")
+
+	# Helmet
+	_clear(helmet_node)
+	helmet_node.visible = helmet != null
+	if helmet != null:
+		_build_helmet(str(helmet.get("model", "cap")), helmet.get("color", ARMOR_DEFAULT))
+	# Hair shows only with no helmet or an open-topped one (so it doesn't poke through).
+	var hair_ok: bool = helmet == null or HAIR_OK_MODELS.has(str(helmet.get("model", "")))
+	hair_node.visible = hair_ok and hat_style != 1
+
+	# Chest
+	_clear(chest_node)
 	chest_node.visible = chest != null
 	if chest != null:
-		_tint_group(chest_node, chest.get("color", Color(0.5, 0.5, 0.55)))
+		_build_chest(str(chest.get("model", "leather")), chest.get("color", ARMOR_DEFAULT))
 
-	var legs = equipment.get("legs")
-	var show_legs: bool = legs != null
-	greave_l.visible = show_legs
-	greave_r.visible = show_legs
-	if show_legs:
-		var lcol: Color = legs.get("color", Color(0.5, 0.5, 0.55))
-		_tint_group(greave_l, lcol)
-		_tint_group(greave_r, lcol)
+	# Legs (the old single-mesh greaves are replaced by per-leg built containers).
+	greave_l.visible = false
+	greave_r.visible = false
+	var li := _leg_container(leg_l)
+	var ri := _leg_container(leg_r)
+	_clear(li)
+	_clear(ri)
+	li.visible = legs != null
+	ri.visible = legs != null
+	if legs != null:
+		var lmodel := str(legs.get("model", "greaves"))
+		var lcol: Color = legs.get("color", ARMOR_DEFAULT)
+		_build_legs(li, lmodel, lcol, -1)
+		_build_legs(ri, lmodel, lcol, 1)
 
 
-## Apply a metal-tinted material to a mesh (or every MeshInstance3D under a group).
-func _tint_group(root: Node, color: Color) -> void:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = color
-	mat.metallic = 0.5
-	mat.roughness = 0.4
-	if root is MeshInstance3D:
-		root.material_override = mat
-	for child in root.find_children("*", "MeshInstance3D", true, false):
-		child.material_override = mat
+func _clear(n: Node) -> void:
+	for c in n.get_children():
+		c.queue_free()
+
+
+## Lazily create (and reuse) a child container under a leg pivot to hold leg armor.
+func _leg_container(pivot: Node3D) -> Node3D:
+	var c := pivot.get_node_or_null("LegArmor") as Node3D
+	if c == null:
+		c = Node3D.new()
+		c.name = "LegArmor"
+		pivot.add_child(c)
+	return c
+
+
+# --- primitive + material helpers ---
+
+func _piece(parent: Node, mesh: Mesh, pos: Vector3, rot_deg: Vector3, col: Color, finish: String, scl := Vector3.ONE) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.position = pos
+	mi.rotation = Vector3(deg_to_rad(rot_deg.x), deg_to_rad(rot_deg.y), deg_to_rad(rot_deg.z))
+	mi.scale = scl
+	mi.material_override = _finish_mat(col, finish)
+	parent.add_child(mi)
+	return mi
+
+
+func _finish_mat(col: Color, finish: String) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_color = col
+	match finish:
+		"metal":
+			m.metallic = 0.6
+			m.roughness = 0.35
+		"accent":
+			m.metallic = 0.7
+			m.roughness = 0.28
+		"bone":
+			m.metallic = 0.0
+			m.roughness = 0.7
+		"dark":
+			m.metallic = 0.0
+			m.roughness = 0.6
+		_:  # cloth
+			m.metallic = 0.0
+			m.roughness = 0.95
+	return m
+
+
+func _box(s: Vector3) -> BoxMesh:
+	var b := BoxMesh.new()
+	b.size = s
+	return b
+
+
+func _sphere(r: float) -> SphereMesh:
+	var s := SphereMesh.new()
+	s.radius = r
+	s.height = r * 2.0
+	s.radial_segments = 12
+	s.rings = 7
+	return s
+
+
+func _cone(base_r: float, h: float) -> CylinderMesh:
+	var c := CylinderMesh.new()
+	c.top_radius = 0.0
+	c.bottom_radius = base_r
+	c.height = h
+	c.radial_segments = 8
+	return c
+
+
+func _cyl(r: float, h: float) -> CylinderMesh:
+	var c := CylinderMesh.new()
+	c.top_radius = r
+	c.bottom_radius = r
+	c.height = h
+	c.radial_segments = 12
+	return c
+
+
+func _torus(inner: float, outer: float) -> TorusMesh:
+	var t := TorusMesh.new()
+	t.inner_radius = inner
+	t.outer_radius = outer
+	t.rings = 14
+	t.ring_segments = 8
+	return t
+
+
+# --- helmet models (built under $Head/Helmet; origin = head centre, head r~0.17) ---
+
+func _build_helmet(model: String, col: Color) -> void:
+	var p := helmet_node
+	match model:
+		"cap":
+			_piece(p, _sphere(0.19), Vector3(0, 0.05, 0), Vector3.ZERO, col, "dark", Vector3(1, 0.6, 1))
+			_piece(p, _box(Vector3(0.30, 0.04, 0.10)), Vector3(0, 0.0, -0.13), Vector3(8, 0, 0), col.darkened(0.2), "dark")
+		"hood":
+			_piece(p, _sphere(0.21), Vector3(0, 0.03, 0.04), Vector3.ZERO, col, "cloth", Vector3(1.05, 1.0, 1.05))
+			_piece(p, _box(Vector3(0.15, 0.20, 0.16)), Vector3(0, 0.10, 0.17), Vector3(-28, 0, 0), col, "cloth")
+			_piece(p, _box(Vector3(0.34, 0.22, 0.30)), Vector3(0, -0.17, 0.03), Vector3.ZERO, col.darkened(0.1), "cloth")
+		"great_helm":
+			_piece(p, _box(Vector3(0.36, 0.40, 0.36)), Vector3(0, 0.0, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _box(Vector3(0.39, 0.07, 0.39)), Vector3(0, 0.20, 0), Vector3.ZERO, col.lightened(0.1), "metal")
+			_piece(p, _box(Vector3(0.26, 0.04, 0.03)), Vector3(0, 0.02, -0.19), Vector3.ZERO, DARKSLOT, "dark")
+			_piece(p, _box(Vector3(0.03, 0.16, 0.03)), Vector3(0, -0.07, -0.19), Vector3.ZERO, DARKSLOT, "dark")
+		"barbute":
+			_piece(p, _sphere(0.20), Vector3(0, 0.02, 0), Vector3.ZERO, col, "metal", Vector3(1, 1.1, 1))
+			_piece(p, _box(Vector3(0.06, 0.22, 0.03)), Vector3(0, -0.02, -0.19), Vector3.ZERO, DARKSLOT, "dark")
+			_piece(p, _box(Vector3(0.22, 0.06, 0.03)), Vector3(0, 0.05, -0.19), Vector3.ZERO, DARKSLOT, "dark")
+			_piece(p, _box(Vector3(0.05, 0.07, 0.30)), Vector3(0, 0.21, 0.0), Vector3.ZERO, col.lightened(0.15), "metal")
+		"wizard_hat":
+			_piece(p, _cyl(0.34, 0.04), Vector3(0, 0.15, 0), Vector3.ZERO, col, "cloth")
+			_piece(p, _cyl(0.21, 0.06), Vector3(0, 0.19, 0), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _cone(0.20, 0.48), Vector3(0, 0.43, 0.02), Vector3(-6, 0, 5), col, "cloth")
+			_piece(p, _box(Vector3(0.06, 0.06, 0.02)), Vector3(0.02, 0.32, -0.16), Vector3(0, 0, 20), ACCENT_GOLD, "accent")
+		"circlet":
+			_piece(p, _torus(0.155, 0.185), Vector3(0, 0.07, 0), Vector3.ZERO, col, "accent")
+			_piece(p, _box(Vector3(0.05, 0.06, 0.04)), Vector3(0, 0.10, -0.165), Vector3(0, 0, 45), Color(0.5, 0.85, 1.0), "accent")
+		"horned":
+			_piece(p, _sphere(0.20), Vector3(0, 0.04, 0), Vector3.ZERO, col, "metal", Vector3(1, 0.85, 1))
+			_piece(p, _box(Vector3(0.34, 0.07, 0.10)), Vector3(0, -0.02, -0.13), Vector3.ZERO, col.lightened(0.1), "metal")
+			_piece(p, _cone(0.06, 0.26), Vector3(-0.17, 0.10, 0), Vector3(-10, 0, 40), col.lightened(0.2), "metal")
+			_piece(p, _cone(0.06, 0.26), Vector3(0.17, 0.10, 0), Vector3(-10, 0, -40), col.lightened(0.2), "metal")
+		"bone":
+			_piece(p, _sphere(0.19), Vector3(0, 0.05, 0), Vector3.ZERO, col, "bone", Vector3(1, 0.95, 1))
+			_piece(p, _box(Vector3(0.30, 0.05, 0.08)), Vector3(0, 0.0, -0.13), Vector3.ZERO, col.darkened(0.05), "bone")
+			_piece(p, _box(Vector3(0.07, 0.07, 0.04)), Vector3(-0.07, 0.0, -0.16), Vector3.ZERO, DARKSLOT, "dark")
+			_piece(p, _box(Vector3(0.07, 0.07, 0.04)), Vector3(0.07, 0.0, -0.16), Vector3.ZERO, DARKSLOT, "dark")
+			for i in range(4):
+				_piece(p, _box(Vector3(0.04, 0.06, 0.03)), Vector3(-0.09 + i * 0.06, -0.14, -0.13), Vector3.ZERO, BONE_COL, "bone")
+		"crown":
+			_piece(p, _torus(0.165, 0.205), Vector3(0, 0.12, 0), Vector3.ZERO, col, "accent")
+			for i in range(6):
+				var a := TAU * i / 6.0
+				_piece(p, _cone(0.035, 0.14), Vector3(sin(a) * 0.18, 0.21, cos(a) * 0.18), Vector3.ZERO, col, "accent")
+			_piece(p, _box(Vector3(0.05, 0.05, 0.04)), Vector3(0, 0.13, -0.18), Vector3(0, 0, 45), Color(0.9, 0.2, 0.3), "accent")
+		"winged":
+			_piece(p, _sphere(0.19), Vector3(0, 0.04, 0), Vector3.ZERO, col, "metal", Vector3(1, 0.75, 1))
+			_piece(p, _box(Vector3(0.04, 0.10, 0.24)), Vector3(0, 0.16, 0), Vector3.ZERO, col.lightened(0.1), "metal")
+			_piece(p, _box(Vector3(0.02, 0.13, 0.20)), Vector3(-0.19, 0.07, 0.02), Vector3(0, 0, 40), col.lightened(0.2), "metal")
+			_piece(p, _box(Vector3(0.02, 0.13, 0.20)), Vector3(0.19, 0.07, 0.02), Vector3(0, 0, -40), col.lightened(0.2), "metal")
+		_:
+			_piece(p, _sphere(0.19), Vector3(0, 0.05, 0), Vector3.ZERO, col, "metal", Vector3(1, 0.6, 1))
+
+
+# --- chest models (built under $ChestArmor; origin = humanoid root, torso ~y0.2) ---
+
+func _build_chest(model: String, col: Color) -> void:
+	var p := chest_node
+	match model:
+		"robe":
+			_piece(p, _box(Vector3(0.52, 0.56, 0.30)), Vector3(0, 0.18, 0), Vector3.ZERO, col, "cloth")
+			_piece(p, _box(Vector3(0.46, 0.42, 0.34)), Vector3(0, -0.18, 0), Vector3.ZERO, col.darkened(0.08), "cloth")
+			_piece(p, _box(Vector3(0.30, 0.10, 0.30)), Vector3(0, 0.44, 0), Vector3.ZERO, col.lightened(0.05), "cloth")
+			_piece(p, _box(Vector3(0.04, 0.55, 0.02)), Vector3(0, 0.18, -0.16), Vector3.ZERO, col.darkened(0.25), "cloth")
+		"leather":
+			_piece(p, _box(Vector3(0.52, 0.50, 0.30)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "dark")
+			_piece(p, _box(Vector3(0.16, 0.10, 0.28)), Vector3(-0.27, 0.44, 0), Vector3.ZERO, col.darkened(0.1), "dark")
+			_piece(p, _box(Vector3(0.16, 0.10, 0.28)), Vector3(0.27, 0.44, 0), Vector3.ZERO, col.darkened(0.1), "dark")
+			_piece(p, _box(Vector3(0.40, 0.06, 0.02)), Vector3(0, 0.22, -0.16), Vector3(0, 0, 32), col.darkened(0.3), "dark")
+		"plate":
+			_piece(p, _box(Vector3(0.54, 0.50, 0.32)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _box(Vector3(0.18, 0.14, 0.32)), Vector3(-0.27, 0.46, 0), Vector3.ZERO, col.lightened(0.1), "metal")
+			_piece(p, _box(Vector3(0.18, 0.14, 0.32)), Vector3(0.27, 0.46, 0), Vector3.ZERO, col.lightened(0.1), "metal")
+			_piece(p, _box(Vector3(0.20, 0.10, 0.24)), Vector3(0, 0.42, 0), Vector3.ZERO, col.lightened(0.05), "metal")
+			_piece(p, _box(Vector3(0.40, 0.02, 0.02)), Vector3(0, 0.30, -0.165), Vector3.ZERO, col.darkened(0.2), "metal")
+			_piece(p, _box(Vector3(0.40, 0.02, 0.02)), Vector3(0, 0.18, -0.165), Vector3.ZERO, col.darkened(0.2), "metal")
+		"scale":
+			_piece(p, _box(Vector3(0.50, 0.50, 0.30)), Vector3(0, 0.22, 0), Vector3.ZERO, col.darkened(0.2), "metal")
+			for row in range(5):
+				for cx in range(5):
+					var sc: Color = col.lightened(0.08) if (row + cx) % 2 == 0 else col.darkened(0.12)
+					_piece(p, _box(Vector3(0.085, 0.06, 0.02)), Vector3(-0.18 + cx * 0.09, 0.40 - row * 0.085, -0.155), Vector3.ZERO, sc, "metal")
+		"brigandine":
+			_piece(p, _box(Vector3(0.52, 0.50, 0.30)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "dark")
+			for row in range(4):
+				for cx in range(4):
+					_piece(p, _sphere(0.022), Vector3(-0.135 + cx * 0.09, 0.36 - row * 0.09, -0.155), Vector3.ZERO, ACCENT_GOLD, "accent")
+		"cloak":
+			_piece(p, _box(Vector3(0.48, 0.44, 0.28)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "cloth")
+			_piece(p, _box(Vector3(0.50, 0.72, 0.04)), Vector3(0, 0.06, 0.17), Vector3(4, 0, 0), col.darkened(0.12), "cloth")
+			_piece(p, _box(Vector3(0.42, 0.12, 0.22)), Vector3(0, 0.46, 0.04), Vector3.ZERO, col.darkened(0.05), "cloth")
+			_piece(p, _box(Vector3(0.05, 0.05, 0.04)), Vector3(0, 0.40, -0.15), Vector3(0, 0, 45), ACCENT_GOLD, "accent")
+		"bone":
+			_piece(p, _box(Vector3(0.06, 0.50, 0.10)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "bone")
+			_piece(p, _box(Vector3(0.06, 0.30, 0.06)), Vector3(0, 0.24, -0.13), Vector3.ZERO, col.lightened(0.05), "bone")
+			for i in range(4):
+				var ry := 0.36 - i * 0.08
+				_piece(p, _box(Vector3(0.22, 0.04, 0.06)), Vector3(-0.10, ry, -0.10), Vector3(0, 0, 14), col, "bone")
+				_piece(p, _box(Vector3(0.22, 0.04, 0.06)), Vector3(0.10, ry, -0.10), Vector3(0, 0, -14), col, "bone")
+		"ornate_robe":
+			_piece(p, _box(Vector3(0.52, 0.56, 0.30)), Vector3(0, 0.18, 0), Vector3.ZERO, col, "cloth")
+			_piece(p, _box(Vector3(0.46, 0.44, 0.34)), Vector3(0, -0.18, 0), Vector3.ZERO, col.darkened(0.08), "cloth")
+			_piece(p, _box(Vector3(0.05, 0.74, 0.02)), Vector3(-0.10, 0.10, -0.16), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _box(Vector3(0.05, 0.74, 0.02)), Vector3(0.10, 0.10, -0.16), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _box(Vector3(0.30, 0.08, 0.30)), Vector3(0, 0.45, 0), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _sphere(0.04), Vector3(0, 0.28, -0.17), Vector3.ZERO, Color(0.5, 0.85, 1.0), "accent")
+			_piece(p, _box(Vector3(0.10, 0.10, 0.10)), Vector3(-0.24, 0.44, 0), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _box(Vector3(0.10, 0.10, 0.10)), Vector3(0.24, 0.44, 0), Vector3.ZERO, ACCENT_GOLD, "accent")
+		"ornate_plate":
+			_piece(p, _box(Vector3(0.55, 0.52, 0.33)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _sphere(0.13), Vector3(-0.28, 0.47, 0), Vector3.ZERO, col.lightened(0.12), "metal", Vector3(1, 0.8, 1))
+			_piece(p, _sphere(0.13), Vector3(0.28, 0.47, 0), Vector3.ZERO, col.lightened(0.12), "metal", Vector3(1, 0.8, 1))
+			_piece(p, _box(Vector3(0.22, 0.10, 0.26)), Vector3(0, 0.42, 0), Vector3.ZERO, col.lightened(0.05), "metal")
+			_piece(p, _box(Vector3(0.42, 0.02, 0.02)), Vector3(0, 0.30, -0.17), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _box(Vector3(0.10, 0.12, 0.04)), Vector3(0, 0.24, -0.17), Vector3(0, 0, 45), ACCENT_GOLD, "accent")
+		_:
+			_piece(p, _box(Vector3(0.54, 0.50, 0.32)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "metal")
+
+
+# --- leg models (built under each leg pivot's LegArmor; leg spans y0..-0.8, side ±1) ---
+
+func _build_legs(p: Node, model: String, col: Color, side: int) -> void:
+	match model:
+		"trousers":
+			_piece(p, _box(Vector3(0.20, 0.62, 0.22)), Vector3(0, -0.34, 0), Vector3.ZERO, col, "cloth")
+		"leather_legs":
+			_piece(p, _box(Vector3(0.19, 0.55, 0.21)), Vector3(0, -0.32, 0), Vector3.ZERO, col, "dark")
+			_piece(p, _box(Vector3(0.17, 0.10, 0.07)), Vector3(0, -0.34, -0.10), Vector3.ZERO, col.darkened(0.15), "dark")
+		"padded":
+			_piece(p, _box(Vector3(0.20, 0.58, 0.22)), Vector3(0, -0.33, 0), Vector3.ZERO, col, "cloth")
+			for i in range(3):
+				_piece(p, _box(Vector3(0.21, 0.02, 0.23)), Vector3(0, -0.18 - i * 0.16, 0), Vector3.ZERO, col.darkened(0.18), "cloth")
+		"greaves":
+			_piece(p, _box(Vector3(0.20, 0.42, 0.22)), Vector3(0, -0.50, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _sphere(0.10), Vector3(0, -0.30, -0.02), Vector3.ZERO, col.lightened(0.1), "metal")
+			_piece(p, _box(Vector3(0.21, 0.06, 0.23)), Vector3(0, -0.18, 0), Vector3.ZERO, col.darkened(0.1), "metal")
+		"wraps":
+			_piece(p, _box(Vector3(0.18, 0.55, 0.20)), Vector3(0, -0.33, 0), Vector3.ZERO, col.darkened(0.15), "dark")
+			for i in range(4):
+				_piece(p, _box(Vector3(0.21, 0.06, 0.21)), Vector3(0, -0.14 - i * 0.13, 0), Vector3(0, 0, side * 14), col, "cloth")
+		"bone_legs":
+			_piece(p, _box(Vector3(0.18, 0.55, 0.20)), Vector3(0, -0.33, 0), Vector3.ZERO, col.darkened(0.1), "dark")
+			_piece(p, _box(Vector3(0.04, 0.50, 0.04)), Vector3(-0.06, -0.33, -0.10), Vector3.ZERO, col, "bone")
+			_piece(p, _box(Vector3(0.04, 0.50, 0.04)), Vector3(0.06, -0.33, -0.10), Vector3.ZERO, col, "bone")
+			_piece(p, _box(Vector3(0.16, 0.08, 0.06)), Vector3(0, -0.30, -0.10), Vector3.ZERO, col, "bone")
+		"swift":
+			_piece(p, _box(Vector3(0.17, 0.55, 0.19)), Vector3(0, -0.33, 0), Vector3.ZERO, col, "cloth")
+			_piece(p, _box(Vector3(0.02, 0.16, 0.12)), Vector3(side * 0.09, -0.48, 0.06), Vector3(0, 0, side * -20), col.lightened(0.15), "accent")
+		"plate_legs":
+			_piece(p, _box(Vector3(0.21, 0.30, 0.23)), Vector3(0, -0.22, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _sphere(0.11), Vector3(0, -0.40, -0.02), Vector3.ZERO, col.lightened(0.12), "metal")
+			_piece(p, _box(Vector3(0.21, 0.34, 0.23)), Vector3(0, -0.58, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _box(Vector3(0.22, 0.02, 0.24)), Vector3(0, -0.20, 0), Vector3.ZERO, ACCENT_GOLD, "accent")
+		_:
+			_piece(p, _box(Vector3(0.20, 0.55, 0.22)), Vector3(0, -0.33, 0), Vector3.ZERO, col, "metal")
 
 
 ## dir: "up" (upward swipe), "down" (overhead chop), or "stab" (forward poke).

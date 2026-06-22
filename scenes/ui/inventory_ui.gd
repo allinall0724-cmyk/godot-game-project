@@ -133,6 +133,12 @@ func _item_tooltip(item) -> String:
 		lines.append("Move Speed: %+.1f" % float(item["move_mod"]))
 	if item.has("jump_mod"):
 		lines.append("Jump: %+.1f" % float(item["jump_mod"]))
+	if item.has("health_bonus"):
+		lines.append("Max Health: %+d" % int(item["health_bonus"]))
+	if item.has("stamina_bonus"):
+		lines.append("Max Stamina: %+.0f" % float(item["stamina_bonus"]))
+	if item.has("regen_bonus"):
+		lines.append("Stamina Regen: %+.1f/s" % float(item["regen_bonus"]))
 	return "\n".join(lines)
 
 

@@ -234,6 +234,8 @@ var _trail_hit: Array = []
 # loot model in GAME_DESIGN.md 1.6/1.7 so this slots into that system later.
 # The player always wields a staff (the basic-attack weapon). Spells are equipped
 # separately (see equipped_spells), not tied to the staff item.
+# Testing flag: start with the full armor catalog in the inventory (see _ready).
+const GRANT_TEST_ARMOR := true
 const STARTING_STAFF := {
 	"name": "Apprentice Staff",
 	"rarity": "Common",
@@ -290,6 +292,13 @@ func _ready() -> void:
 	# Give the player their staff and equip it (visible in hand).
 	add_item(STARTING_STAFF)
 	equip(STARTING_STAFF)
+
+	# Testing convenience: stock the whole armor catalog so every helmet/chest/pants
+	# is reachable from the inventory (press I, click to equip). Remove or gate this
+	# once armor is obtained through loot/leveling instead.
+	if GRANT_TEST_ARMOR:
+		for item in ArmorCatalog.all_items():
+			add_item(item)
 
 
 func set_camera(c: Node3D) -> void:
@@ -530,6 +539,16 @@ func get_max_health() -> int:
 		if it != null:
 			h += int(it.get("health_bonus", 0))
 	return h
+
+
+## Passive: max stamina = 100 + equipped items' "stamina_bonus".
+func get_max_stamina() -> float:
+	var s := 100.0
+	for slot in equipment:
+		var it = equipment[slot]
+		if it != null:
+			s += float(it.get("stamina_bonus", 0.0))
+	return maxf(20.0, s)
 
 
 ## Passive: stamina regen = base + equipped items' "regen_bonus".
@@ -2023,7 +2042,9 @@ func equip(item: Dictionary) -> void:
 	# Reflect armor (helmet/chest/legs) on the 3D character.
 	humanoid.apply_equipment(equipment)
 
-	# The staff sets a fixed melee reach; recompute passive max health.
+	# The staff sets a fixed melee reach; recompute passive max health/stamina.
 	attack_hitbox.scale = Vector3.ONE * STAFF_REACH
 	max_health = get_max_health()
 	health = min(health, max_health)
+	max_stamina = get_max_stamina()
+	stamina = min(stamina, max_stamina)
