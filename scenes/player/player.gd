@@ -253,6 +253,7 @@ var _aura_radius := 0.0
 var _aura_dot := 0.0
 var _aura_color := Color(1, 0.5, 0.15)
 var _aura_tick := 0.0
+var _invuln_time := 0.0            # Phase Dash i-frames (take no damage)
 var _pound_params := {}            # params for the pending pound AoE
 var _meteor_target := Vector3.ZERO # landing point fixed at cast (telegraph + impact)
 
@@ -659,6 +660,8 @@ func _update_buffs(delta: float) -> void:
 		_regen_buff_time -= delta
 	if _counter_time > 0.0:
 		_counter_time -= delta
+	if _invuln_time > 0.0:
+		_invuln_time -= delta
 	if _stealth_time > 0.0:
 		_stealth_time -= delta
 		# Faint shimmer while hidden.
@@ -866,6 +869,10 @@ func _run_effect(mv: Dictionary) -> void:
 		"holy_nova": _eff_holy_nova(mv)
 		"line": _eff_line(mv)
 		"cloud": _eff_cloud(mv)
+		"blackhole": _eff_blackhole(mv)
+		"sentry": _eff_sentry(mv)
+		"launch": _eff_launch(mv)
+		"phase": _eff_phase(mv)
 
 
 func _telegraph(mv: Dictionary, t: float) -> void:
@@ -1596,6 +1603,12 @@ func _eff_buff(mv: Dictionary) -> void:
 			# Passive melee reflect for the duration (reuses the counter machinery).
 			_counter_time = dur
 			_counter_dmg = _amp(int(amt))
+		"frenzy":
+			# Battle Trance: +damage AND +move speed at once.
+			_power_amt = amt
+			_power_time = dur
+			_speed_amt = float(mv.get("speed_amount", 3.0))
+			_speed_time = dur
 	for i in range(10):
 		var a := TAU * float(i) / 10.0
 		_spawn_emitter(global_position + Vector3(cos(a) * 0.5, 0.2, sin(a) * 0.5), col, 0.16, 0.6, Vector3.UP * 1.6)
@@ -2313,6 +2326,126 @@ func _cloud_tick(rng: float, dmg: int) -> void:
 	_spawn_lightning_strike(best.global_position)
 
 
+# ============================================================================
+#  Pass 7 effects — black hole / sentry / launch / phase dash
+# ============================================================================
+
+# Shadow ultimate: a singularity that drags enemies inward, then implodes for heavy
+# AoE damage (distinct from Singularity, which only pulls).
+func _eff_blackhole(mv: Dictionary) -> void:
+	var center := global_position + _aim_direction() * 7.0
+	center.y = _ground_y(center) + 1.5
+	var radius := float(mv.get("radius", 8.0))
+	var force := float(mv.get("force", 15.0))
+	var dmg := _amp(int(mv.get("dmg", 14)))
+	var ticks := int(mv.get("ticks", 10))
+	var col: Color = mv.get("color", SHADOW_COL)
+	var core := _make_orb(center, 0.5, col)
+	var tw := core.create_tween().set_loops()
+	tw.tween_property(core, "scale", Vector3.ONE * 1.3, 0.3)
+	tw.tween_property(core, "scale", Vector3.ONE * 0.7, 0.3)
+	for t in range(ticks):
+		get_tree().create_timer(float(t) * 0.12).timeout.connect(func(): _pull_tick(center, radius, force, 0))
+	get_tree().create_timer(float(ticks) * 0.12 + 0.05).timeout.connect(func(): _blackhole_implode(center, radius, dmg, col, core))
+
+
+func _blackhole_implode(center: Vector3, radius: float, dmg: int, col: Color, core: Node) -> void:
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) <= radius and e.has_method("take_damage"):
+			e.take_damage(dmg)
+	_spawn_flash(center, col, 6.0, radius * 2.0, 0.3)
+	_spawn_shockring(center, radius, col, 0.45)
+	_spawn_burst(center, radius * 0.5, col, 16)
+	_free_node(core)
+
+
+# Arcane: deploy a stationary sentry that fires bolts at the nearest enemy for a while.
+func _eff_sentry(mv: Dictionary) -> void:
+	var pos := global_position + _aim_direction() * 2.5
+	pos.y = _ground_y(pos)
+	var col: Color = mv.get("color", ARCANE_COL)
+	var life := float(mv.get("life", 8.0))
+	var base := MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = 0.1
+	cyl.bottom_radius = 0.18
+	cyl.height = 0.9
+	base.mesh = cyl
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = col.darkened(0.3)
+	mat.emission_enabled = true
+	mat.emission = col
+	mat.emission_energy_multiplier = 1.5
+	base.material_override = mat
+	get_tree().current_scene.add_child(base)
+	base.global_position = pos + Vector3.UP * 0.45
+	var orb := _make_orb(pos + Vector3.UP * 1.0, 0.18, col)
+	var interval := float(mv.get("interval", 0.6))
+	var dmg := _amp(int(mv.get("dmg", 3)))
+	var rng := float(mv.get("range", 14.0))
+	var speed := float(mv.get("speed", 24.0))
+	var shots := int(life / interval)
+	for s in range(shots):
+		get_tree().create_timer(float(s) * interval).timeout.connect(func(): _sentry_shot(pos + Vector3.UP * 1.0, rng, dmg, speed, col))
+	get_tree().create_timer(life).timeout.connect(base.queue_free)
+	get_tree().create_timer(life).timeout.connect(orb.queue_free)
+
+
+func _sentry_shot(from: Vector3, rng: float, dmg: int, speed: float, col: Color) -> void:
+	var best = null
+	var bd := INF
+	for e in get_tree().get_nodes_in_group("enemies"):
+		var d := from.distance_to(e.global_position)
+		if d < bd and d <= rng:
+			bd = d
+			best = e
+	if best == null:
+		return
+	var packed: PackedScene = load(FIREBALL_SCENE)
+	if packed == null:
+		return
+	var dir: Vector3 = (best.global_position + Vector3.UP * 0.8 - from).normalized()
+	var fb = packed.instantiate()
+	get_tree().current_scene.add_child(fb)
+	fb.global_position = from
+	fb.setup(dir, dmg, speed, 0.7, col, false)
+
+
+# Earth: heave the ground up — launch nearby enemies skyward and damage them.
+func _eff_launch(mv: Dictionary) -> void:
+	var radius := float(mv.get("radius", 4.5))
+	var dmg := _amp(int(mv.get("dmg", 5)))
+	var power := float(mv.get("power", 10.0))
+	var col: Color = mv.get("color", EARTH_COL)
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if global_position.distance_to(e.global_position) <= radius:
+			if e.has_method("take_damage"):
+				e.take_damage(dmg)
+			if e.has_method("apply_knockback"):
+				e.apply_knockback(Vector3.UP * power)
+	_spawn_ring(global_position + Vector3.UP * 0.3, radius, col, 14)
+	_spawn_flash(global_position + Vector3.UP * 0.4, col, 2.5, radius * 1.6, 0.2)
+	for i in range(8):
+		var a := TAU * float(i) / 8.0
+		_spawn_emitter(global_position + Vector3(cos(a) * radius * 0.6, 0.2, sin(a) * radius * 0.6), col, 0.18, 0.5, Vector3.UP * 3.0)
+
+
+# Wind/arcane: a dash with brief invulnerability (i-frames) — an escape/dodge tool.
+func _eff_phase(mv: Dictionary) -> void:
+	var spd := float(mv.get("speed", 30.0))
+	_invuln_time = float(mv.get("invuln", 0.5))
+	var dir := Vector3(velocity.x, 0.0, velocity.z)
+	if dir.length() < 0.5:
+		dir = _aim_direction()
+	dir = dir.normalized()
+	velocity.x = dir.x * spd
+	velocity.z = dir.z * spd
+	humanoid.play_roll()
+	var col: Color = mv.get("color", ARCANE_COL)
+	for i in range(5):
+		get_tree().create_timer(float(i) * 0.05).timeout.connect(func(): _spawn_emitter(global_position + Vector3.UP * 0.9, col, 0.2, 0.4, Vector3.ZERO))
+
+
 # --- Ability VFX (brief code-only emissive primitives) ---
 
 
@@ -2391,6 +2524,8 @@ func _spawn_ring(center: Vector3, radius: float, color: Color, count: int) -> vo
 ## Take damage from goblins/orcs (or anything), show a floating number, and respawn
 ## at the village if we hit 0 HP.
 func take_damage(amount: int) -> void:
+	if _invuln_time > 0.0:
+		return  # Phase Dash i-frames
 	if _shield_time > 0.0:
 		amount = maxi(0, int(round(float(amount) * (1.0 - _shield_amt))))  # Stone Skin
 	health = max(0, health - amount)
@@ -2411,6 +2546,7 @@ func _respawn() -> void:
 	_counter_time = 0.0
 	_stealth_time = 0.0
 	_aura_time = 0.0
+	_invuln_time = 0.0
 	global_position = Vector3(0.0, 4.0, 0.0)
 	velocity = Vector3.ZERO
 
