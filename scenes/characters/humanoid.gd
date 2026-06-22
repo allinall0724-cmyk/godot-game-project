@@ -278,7 +278,7 @@ const ACCENT_GOLD := Color(0.85, 0.72, 0.28)
 const DARKSLOT := Color(0.07, 0.07, 0.09)   # eye slits / openings
 const BONE_COL := Color(0.90, 0.87, 0.78)
 # Open-topped helmets that should still show the character's hair.
-const HAIR_OK_MODELS := ["circlet", "crown", "winged"]
+const HAIR_OK_MODELS := ["circlet", "crown", "winged", "tiara", "antlers", "flame_crown", "ice_crown", "halo", "laurel"]
 
 
 ## Rebuild the visible armor (helmet / chest / per-leg) from the equipment dict.
@@ -465,6 +465,149 @@ func _build_helmet(model: String, col: Color) -> void:
 			_piece(p, _box(Vector3(0.04, 0.10, 0.24)), Vector3(0, 0.16, 0), Vector3.ZERO, col.lightened(0.1), "metal")
 			_piece(p, _box(Vector3(0.02, 0.13, 0.20)), Vector3(-0.19, 0.07, 0.02), Vector3(0, 0, 40), col.lightened(0.2), "metal")
 			_piece(p, _box(Vector3(0.02, 0.13, 0.20)), Vector3(0.19, 0.07, 0.02), Vector3(0, 0, -40), col.lightened(0.2), "metal")
+		"jester":
+			_piece(p, _sphere(0.19), Vector3(0, 0.04, 0), Vector3.ZERO, col, "cloth", Vector3(1, 0.7, 1))
+			_piece(p, _cone(0.05, 0.22), Vector3(-0.16, 0.10, 0), Vector3(0, 0, 70), col.darkened(0.1), "cloth")
+			_piece(p, _sphere(0.045), Vector3(-0.27, 0.04, 0), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _cone(0.05, 0.22), Vector3(0.16, 0.10, 0), Vector3(0, 0, -70), col.lightened(0.1), "cloth")
+			_piece(p, _sphere(0.045), Vector3(0.27, 0.04, 0), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _cone(0.05, 0.22), Vector3(0, 0.12, 0.16), Vector3(60, 0, 0), col.darkened(0.1), "cloth")
+			_piece(p, _sphere(0.045), Vector3(0, 0.06, 0.29), Vector3.ZERO, ACCENT_GOLD, "accent")
+		"viking":
+			_piece(p, _sphere(0.20), Vector3(0, 0.02, 0), Vector3.ZERO, col, "metal", Vector3(1, 0.95, 1))
+			_piece(p, _box(Vector3(0.05, 0.16, 0.05)), Vector3(0, -0.04, -0.18), Vector3.ZERO, col.lightened(0.1), "metal")
+			_piece(p, _cone(0.06, 0.24), Vector3(-0.18, 0.06, 0), Vector3(0, 0, 55), BONE_COL, "bone")
+			_piece(p, _cone(0.06, 0.24), Vector3(0.18, 0.06, 0), Vector3(0, 0, -55), BONE_COL, "bone")
+		"kabuto":
+			_piece(p, _sphere(0.19), Vector3(0, 0.04, 0), Vector3.ZERO, col, "metal", Vector3(1, 0.8, 1))
+			_piece(p, _cyl(0.28, 0.05), Vector3(0, -0.06, 0.04), Vector3(18, 0, 0), col.darkened(0.15), "metal")
+			_piece(p, _cone(0.03, 0.18), Vector3(-0.05, 0.18, -0.08), Vector3(20, 0, 25), ACCENT_GOLD, "accent")
+			_piece(p, _cone(0.03, 0.18), Vector3(0.05, 0.18, -0.08), Vector3(20, 0, -25), ACCENT_GOLD, "accent")
+		"plague":
+			_piece(p, _sphere(0.19), Vector3(0, 0.04, 0), Vector3.ZERO, col, "dark")
+			_piece(p, _cone(0.07, 0.28), Vector3(0, -0.02, -0.20), Vector3(-90, 0, 0), col.darkened(0.2), "dark")
+			_piece(p, _sphere(0.045), Vector3(-0.08, 0.03, -0.13), Vector3.ZERO, DARKSLOT, "dark")
+			_piece(p, _sphere(0.045), Vector3(0.08, 0.03, -0.13), Vector3.ZERO, DARKSLOT, "dark")
+		"spartan":
+			_piece(p, _sphere(0.19), Vector3(0, 0.02, 0), Vector3.ZERO, col, "metal", Vector3(1, 1.05, 1))
+			_piece(p, _box(Vector3(0.05, 0.18, 0.03)), Vector3(0, -0.02, -0.19), Vector3.ZERO, DARKSLOT, "dark")
+			_piece(p, _box(Vector3(0.18, 0.05, 0.03)), Vector3(0, 0.06, -0.19), Vector3.ZERO, DARKSLOT, "dark")
+			_piece(p, _box(Vector3(0.03, 0.12, 0.34)), Vector3(0, 0.22, 0.0), Vector3.ZERO, Color(0.8, 0.2, 0.2), "cloth")
+		"antlers":
+			_piece(p, _sphere(0.18), Vector3(0, 0.04, 0), Vector3.ZERO, col, "dark", Vector3(1, 0.6, 1))
+			_piece(p, _cone(0.03, 0.22), Vector3(-0.12, 0.12, 0), Vector3(0, 0, 28), BONE_COL, "bone")
+			_piece(p, _cone(0.02, 0.10), Vector3(-0.19, 0.20, 0), Vector3(0, 0, 55), BONE_COL, "bone")
+			_piece(p, _cone(0.03, 0.22), Vector3(0.12, 0.12, 0), Vector3(0, 0, -28), BONE_COL, "bone")
+			_piece(p, _cone(0.02, 0.10), Vector3(0.19, 0.20, 0), Vector3(0, 0, -55), BONE_COL, "bone")
+		"tiara":
+			_piece(p, _torus(0.15, 0.17), Vector3(0, 0.08, 0), Vector3.ZERO, col, "accent")
+			_piece(p, _box(Vector3(0.04, 0.05, 0.03)), Vector3(0, 0.11, -0.16), Vector3(0, 0, 45), Color(0.5, 0.85, 1.0), "accent")
+			_piece(p, _box(Vector3(0.03, 0.04, 0.03)), Vector3(-0.10, 0.09, -0.12), Vector3(0, 0, 45), Color(1.0, 0.5, 0.7), "accent")
+			_piece(p, _box(Vector3(0.03, 0.04, 0.03)), Vector3(0.10, 0.09, -0.12), Vector3(0, 0, 45), Color(1.0, 0.5, 0.7), "accent")
+		"demon":
+			_piece(p, _sphere(0.19), Vector3(0, 0.03, 0), Vector3.ZERO, col, "metal", Vector3(1, 0.85, 1))
+			_piece(p, _cone(0.07, 0.30), Vector3(-0.16, 0.08, 0.02), Vector3(-20, 0, 45), col.darkened(0.2), "metal")
+			_piece(p, _cone(0.07, 0.30), Vector3(0.16, 0.08, 0.02), Vector3(-20, 0, -45), col.darkened(0.2), "metal")
+			_piece(p, _box(Vector3(0.06, 0.04, 0.03)), Vector3(-0.07, 0.02, -0.16), Vector3(0, 0, 20), Color(1.0, 0.2, 0.1), "accent")
+			_piece(p, _box(Vector3(0.06, 0.04, 0.03)), Vector3(0.07, 0.02, -0.16), Vector3(0, 0, -20), Color(1.0, 0.2, 0.1), "accent")
+		"flame_crown":
+			_piece(p, _torus(0.16, 0.19), Vector3(0, 0.08, 0), Vector3.ZERO, col, "accent")
+			for i in range(5):
+				var a := TAU * i / 5.0
+				_piece(p, _cone(0.045, 0.20), Vector3(sin(a) * 0.16, 0.20, cos(a) * 0.16), Vector3.ZERO, Color(1.0, 0.45, 0.12), "accent")
+		"ice_crown":
+			_piece(p, _torus(0.155, 0.185), Vector3(0, 0.07, 0), Vector3.ZERO, col, "accent")
+			_piece(p, _cone(0.04, 0.24), Vector3(0, 0.22, -0.02), Vector3.ZERO, Color(0.7, 0.9, 1.0), "accent")
+			_piece(p, _cone(0.03, 0.16), Vector3(-0.12, 0.16, 0), Vector3(0, 0, 30), Color(0.7, 0.9, 1.0), "accent")
+			_piece(p, _cone(0.03, 0.16), Vector3(0.12, 0.16, 0), Vector3(0, 0, -30), Color(0.7, 0.9, 1.0), "accent")
+		"storm_helm":
+			_piece(p, _sphere(0.19), Vector3(0, 0.03, 0), Vector3.ZERO, col, "metal", Vector3(1, 0.85, 1))
+			_piece(p, _box(Vector3(0.04, 0.10, 0.03)), Vector3(0, 0.20, -0.02), Vector3(0, 0, 20), Color(0.6, 0.85, 1.0), "accent")
+			_piece(p, _box(Vector3(0.04, 0.10, 0.03)), Vector3(0.03, 0.27, -0.02), Vector3(0, 0, -25), Color(0.6, 0.85, 1.0), "accent")
+			_piece(p, _box(Vector3(0.18, 0.04, 0.03)), Vector3(0, 0.06, -0.18), Vector3.ZERO, DARKSLOT, "dark")
+		"halo":
+			_piece(p, _sphere(0.18), Vector3(0, 0.03, 0), Vector3.ZERO, col, "cloth", Vector3(1, 0.55, 1))
+			_piece(p, _torus(0.12, 0.15), Vector3(0, 0.30, 0), Vector3(8, 0, 0), Color(1.0, 0.92, 0.5), "accent")
+		"shadow_hood":
+			_piece(p, _sphere(0.21), Vector3(0, 0.03, 0.04), Vector3.ZERO, col, "cloth", Vector3(1.05, 1.0, 1.05))
+			_piece(p, _box(Vector3(0.16, 0.12, 0.02)), Vector3(0, 0.0, -0.17), Vector3.ZERO, DARKSLOT, "dark")
+			_piece(p, _box(Vector3(0.04, 0.03, 0.02)), Vector3(-0.05, 0.02, -0.16), Vector3.ZERO, Color(0.7, 0.3, 1.0), "accent")
+			_piece(p, _box(Vector3(0.04, 0.03, 0.02)), Vector3(0.05, 0.02, -0.16), Vector3.ZERO, Color(0.7, 0.3, 1.0), "accent")
+			_piece(p, _box(Vector3(0.30, 0.20, 0.28)), Vector3(0, -0.17, 0.03), Vector3.ZERO, col.darkened(0.1), "cloth")
+		"druid_hood":
+			_piece(p, _sphere(0.20), Vector3(0, 0.03, 0.03), Vector3.ZERO, col, "cloth", Vector3(1.02, 0.95, 1.02))
+			_piece(p, _cone(0.05, 0.14), Vector3(-0.10, 0.16, 0.04), Vector3(0, 0, 40), col.lightened(0.15), "cloth")
+			_piece(p, _cone(0.05, 0.14), Vector3(0.10, 0.16, 0.04), Vector3(0, 0, -40), col.lightened(0.15), "cloth")
+			_piece(p, _cone(0.05, 0.16), Vector3(0, 0.18, 0.08), Vector3(20, 0, 0), col.lightened(0.1), "cloth")
+		"crystal_helm":
+			_piece(p, _sphere(0.18), Vector3(0, 0.04, 0), Vector3.ZERO, col, "accent", Vector3(1, 0.9, 1))
+			_piece(p, _cone(0.05, 0.18), Vector3(0, 0.20, 0), Vector3.ZERO, col.lightened(0.2), "accent")
+			_piece(p, _cone(0.035, 0.12), Vector3(-0.10, 0.16, 0), Vector3(0, 0, 25), col.lightened(0.2), "accent")
+			_piece(p, _cone(0.035, 0.12), Vector3(0.10, 0.16, 0), Vector3(0, 0, -25), col.lightened(0.2), "accent")
+		"pharaoh":
+			_piece(p, _sphere(0.19), Vector3(0, 0.04, 0), Vector3.ZERO, col, "cloth", Vector3(1, 0.8, 1))
+			_piece(p, _box(Vector3(0.16, 0.30, 0.10)), Vector3(-0.16, -0.06, 0.02), Vector3(0, 0, -8), col, "cloth")
+			_piece(p, _box(Vector3(0.16, 0.30, 0.10)), Vector3(0.16, -0.06, 0.02), Vector3(0, 0, 8), col, "cloth")
+			_piece(p, _box(Vector3(0.40, 0.04, 0.04)), Vector3(0, 0.0, -0.16), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _cone(0.03, 0.10), Vector3(0, 0.10, -0.16), Vector3(-30, 0, 0), Color(0.2, 0.7, 0.4), "accent")
+		"mushroom":
+			_piece(p, _sphere(0.26), Vector3(0, 0.10, 0), Vector3.ZERO, col, "cloth", Vector3(1, 0.6, 1))
+			for sp in [Vector3(-0.10, 0.16, -0.08), Vector3(0.12, 0.14, -0.04), Vector3(0.0, 0.20, -0.12), Vector3(-0.14, 0.12, 0.06)]:
+				_piece(p, _sphere(0.03), sp, Vector3.ZERO, Color(0.95, 0.92, 0.85), "cloth")
+		"war_horns":
+			_piece(p, _sphere(0.19), Vector3(0, 0.02, 0), Vector3.ZERO, col, "metal", Vector3(1, 0.9, 1))
+			_piece(p, _cone(0.07, 0.18), Vector3(-0.17, 0.06, 0), Vector3(0, 0, 80), BONE_COL, "bone")
+			_piece(p, _cone(0.05, 0.14), Vector3(-0.26, 0.10, 0), Vector3(0, 0, 130), BONE_COL, "bone")
+			_piece(p, _cone(0.07, 0.18), Vector3(0.17, 0.06, 0), Vector3(0, 0, -80), BONE_COL, "bone")
+			_piece(p, _cone(0.05, 0.14), Vector3(0.26, 0.10, 0), Vector3(0, 0, -130), BONE_COL, "bone")
+		"turban":
+			_piece(p, _sphere(0.20), Vector3(0, 0.05, 0), Vector3.ZERO, col, "cloth", Vector3(1, 0.75, 1))
+			_piece(p, _torus(0.17, 0.20), Vector3(0, 0.06, 0), Vector3.ZERO, col.lightened(0.1), "cloth")
+			_piece(p, _torus(0.16, 0.185), Vector3(0, 0.12, 0), Vector3.ZERO, col.darkened(0.08), "cloth")
+			_piece(p, _box(Vector3(0.05, 0.05, 0.03)), Vector3(0, 0.10, -0.18), Vector3(0, 0, 45), Color(0.5, 0.85, 1.0), "accent")
+			_piece(p, _cone(0.04, 0.16), Vector3(0, 0.20, 0.04), Vector3(20, 0, 0), col.lightened(0.15), "cloth")
+		"centurion":
+			_piece(p, _sphere(0.19), Vector3(0, 0.02, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _box(Vector3(0.36, 0.10, 0.04)), Vector3(0, 0.22, 0), Vector3.ZERO, Color(0.8, 0.2, 0.2), "cloth")
+			_piece(p, _box(Vector3(0.18, 0.05, 0.03)), Vector3(0, 0.05, -0.18), Vector3.ZERO, DARKSLOT, "dark")
+			_piece(p, _box(Vector3(0.05, 0.14, 0.03)), Vector3(0, -0.04, -0.17), Vector3.ZERO, col.lightened(0.1), "metal")
+		"topknot":
+			_piece(p, _sphere(0.19), Vector3(0, 0.04, 0), Vector3.ZERO, col, "cloth", Vector3(1, 0.55, 1))
+			_piece(p, _torus(0.15, 0.175), Vector3(0, 0.06, 0), Vector3.ZERO, col.darkened(0.15), "dark")
+			_piece(p, _cyl(0.03, 0.10), Vector3(0, 0.22, 0.02), Vector3.ZERO, Color(0.1, 0.08, 0.07), "dark")
+			_piece(p, _sphere(0.05), Vector3(0, 0.28, 0.02), Vector3.ZERO, Color(0.1, 0.08, 0.07), "dark")
+		"wolf_pelt":
+			_piece(p, _sphere(0.21), Vector3(0, 0.04, 0.03), Vector3.ZERO, col, "cloth", Vector3(1.05, 1.0, 1.05))
+			_piece(p, _box(Vector3(0.16, 0.12, 0.16)), Vector3(0, 0.10, -0.10), Vector3(20, 0, 0), col, "cloth")
+			_piece(p, _cone(0.06, 0.16), Vector3(0, 0.02, -0.18), Vector3(-90, 0, 0), col.darkened(0.1), "cloth")
+			_piece(p, _cone(0.05, 0.14), Vector3(-0.10, 0.22, -0.06), Vector3(0, 0, 18), col.darkened(0.05), "cloth")
+			_piece(p, _cone(0.05, 0.14), Vector3(0.10, 0.22, -0.06), Vector3(0, 0, -18), col.darkened(0.05), "cloth")
+			_piece(p, _box(Vector3(0.30, 0.18, 0.26)), Vector3(0, -0.16, 0.05), Vector3.ZERO, col.darkened(0.08), "cloth")
+		"skull_crown":
+			_piece(p, _sphere(0.19), Vector3(0, 0.05, 0), Vector3.ZERO, BONE_COL, "bone", Vector3(1, 0.95, 1))
+			_piece(p, _box(Vector3(0.30, 0.05, 0.08)), Vector3(0, 0.0, -0.13), Vector3.ZERO, BONE_COL.darkened(0.05), "bone")
+			_piece(p, _box(Vector3(0.07, 0.07, 0.04)), Vector3(-0.07, 0.0, -0.16), Vector3.ZERO, DARKSLOT, "dark")
+			_piece(p, _box(Vector3(0.07, 0.07, 0.04)), Vector3(0.07, 0.0, -0.16), Vector3.ZERO, DARKSLOT, "dark")
+			_piece(p, _torus(0.16, 0.19), Vector3(0, 0.12, 0), Vector3.ZERO, col, "accent")
+			for i in range(5):
+				var a := TAU * i / 5.0
+				_piece(p, _cone(0.03, 0.10), Vector3(sin(a) * 0.17, 0.18, cos(a) * 0.17), Vector3.ZERO, col, "accent")
+		"laurel":
+			for i in range(10):
+				var a := TAU * i / 10.0
+				_piece(p, _box(Vector3(0.05, 0.10, 0.03)), Vector3(sin(a) * 0.18, 0.07, cos(a) * 0.18), Vector3(0, -a, 30), col, "cloth")
+		"diving_helm":
+			_piece(p, _sphere(0.21), Vector3(0, 0.02, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _torus(0.07, 0.10), Vector3(0, 0.0, -0.18), Vector3(90, 0, 0), col.lightened(0.1), "metal")
+			_piece(p, _sphere(0.06), Vector3(0, 0.0, -0.20), Vector3.ZERO, Color(0.5, 0.7, 0.8), "accent")
+			for i in range(4):
+				var a := TAU * i / 4.0
+				_piece(p, _sphere(0.02), Vector3(sin(a) * 0.12, cos(a) * 0.10, -0.17), Vector3.ZERO, ACCENT_GOLD, "accent")
+		"cyclops":
+			_piece(p, _sphere(0.19), Vector3(0, 0.03, 0), Vector3.ZERO, col, "metal", Vector3(1, 0.95, 1))
+			_piece(p, _box(Vector3(0.30, 0.06, 0.05)), Vector3(0, 0.06, -0.15), Vector3.ZERO, col.lightened(0.1), "metal")
+			_piece(p, _sphere(0.07), Vector3(0, 0.0, -0.16), Vector3.ZERO, Color(0.9, 0.2, 0.15), "accent")
+			_piece(p, _box(Vector3(0.18, 0.05, 0.03)), Vector3(0, -0.10, -0.16), Vector3.ZERO, DARKSLOT, "dark")
 		_:
 			_piece(p, _sphere(0.19), Vector3(0, 0.05, 0), Vector3.ZERO, col, "metal", Vector3(1, 0.6, 1))
 
@@ -530,6 +673,114 @@ func _build_chest(model: String, col: Color) -> void:
 			_piece(p, _box(Vector3(0.22, 0.10, 0.26)), Vector3(0, 0.42, 0), Vector3.ZERO, col.lightened(0.05), "metal")
 			_piece(p, _box(Vector3(0.42, 0.02, 0.02)), Vector3(0, 0.30, -0.17), Vector3.ZERO, ACCENT_GOLD, "accent")
 			_piece(p, _box(Vector3(0.10, 0.12, 0.04)), Vector3(0, 0.24, -0.17), Vector3(0, 0, 45), ACCENT_GOLD, "accent")
+		"fur":
+			_piece(p, _box(Vector3(0.50, 0.48, 0.30)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "dark")
+			_piece(p, _sphere(0.15), Vector3(-0.26, 0.46, 0), Vector3.ZERO, col.lightened(0.2), "cloth")
+			_piece(p, _sphere(0.15), Vector3(0.26, 0.46, 0), Vector3.ZERO, col.lightened(0.2), "cloth")
+			for i in range(5):
+				_piece(p, _sphere(0.07), Vector3(-0.16 + i * 0.08, 0.44, -0.14), Vector3.ZERO, col.lightened(0.25), "cloth")
+		"royal":
+			_piece(p, _box(Vector3(0.52, 0.50, 0.32)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _box(Vector3(0.52, 0.80, 0.04)), Vector3(0, 0.02, 0.17), Vector3(3, 0, 0), Color(0.6, 0.12, 0.16), "cloth")
+			_piece(p, _box(Vector3(0.16, 0.10, 0.34)), Vector3(-0.27, 0.47, 0), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _box(Vector3(0.16, 0.10, 0.34)), Vector3(0.27, 0.47, 0), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _sphere(0.05), Vector3(0, 0.28, -0.17), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _box(Vector3(0.04, 0.50, 0.02)), Vector3(0, 0.22, -0.165), Vector3.ZERO, ACCENT_GOLD, "accent")
+		"dragon":
+			_piece(p, _box(Vector3(0.52, 0.50, 0.30)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "metal")
+			for i in range(4):
+				_piece(p, _cone(0.05, 0.16), Vector3(0, 0.42 - i * 0.11, 0.16), Vector3(70, 0, 0), col.lightened(0.15), "metal")
+			_piece(p, _box(Vector3(0.20, 0.16, 0.32)), Vector3(-0.26, 0.44, 0), Vector3(0, 0, 18), col.darkened(0.1), "metal")
+			_piece(p, _box(Vector3(0.20, 0.16, 0.32)), Vector3(0.26, 0.44, 0), Vector3(0, 0, -18), col.darkened(0.1), "metal")
+		"chainmail":
+			_piece(p, _box(Vector3(0.50, 0.52, 0.30)), Vector3(0, 0.20, 0), Vector3.ZERO, col.darkened(0.2), "metal")
+			for row in range(6):
+				for cx in range(6):
+					_piece(p, _sphere(0.018), Vector3(-0.165 + cx * 0.066, 0.40 - row * 0.07, -0.155), Vector3.ZERO, col.lightened(0.05), "metal")
+		"monk":
+			_piece(p, _box(Vector3(0.50, 0.56, 0.30)), Vector3(0, 0.18, 0), Vector3.ZERO, col, "cloth")
+			_piece(p, _box(Vector3(0.46, 0.40, 0.34)), Vector3(0, -0.18, 0), Vector3.ZERO, col.darkened(0.06), "cloth")
+			_piece(p, _box(Vector3(0.54, 0.07, 0.34)), Vector3(0, 0.02, 0), Vector3.ZERO, col.darkened(0.3), "cloth")
+			_piece(p, _box(Vector3(0.07, 0.34, 0.02)), Vector3(0.16, -0.10, -0.16), Vector3(0, 0, 8), col.darkened(0.3), "cloth")
+		"spellweave":
+			_piece(p, _box(Vector3(0.50, 0.56, 0.30)), Vector3(0, 0.18, 0), Vector3.ZERO, col, "cloth")
+			_piece(p, _box(Vector3(0.46, 0.42, 0.34)), Vector3(0, -0.18, 0), Vector3.ZERO, col.darkened(0.08), "cloth")
+			for r in [Vector3(-0.12, 0.30, -0.16), Vector3(0.12, 0.24, -0.16), Vector3(0.0, 0.12, -0.17), Vector3(-0.10, 0.0, -0.17), Vector3(0.13, 0.40, -0.15)]:
+				_piece(p, _box(Vector3(0.05, 0.05, 0.02)), r, Vector3(0, 0, 45), Color(0.5, 0.9, 1.0), "accent")
+		"flame_plate":
+			_piece(p, _box(Vector3(0.54, 0.50, 0.32)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _box(Vector3(0.18, 0.14, 0.32)), Vector3(-0.27, 0.46, 0), Vector3.ZERO, col.lightened(0.1), "metal")
+			_piece(p, _box(Vector3(0.18, 0.14, 0.32)), Vector3(0.27, 0.46, 0), Vector3.ZERO, col.lightened(0.1), "metal")
+			for r in [Vector3(-0.08, 0.32, -0.165), Vector3(0.06, 0.20, -0.165), Vector3(-0.02, 0.10, -0.165)]:
+				_piece(p, _box(Vector3(0.03, 0.14, 0.02)), r, Vector3(0, 0, 15), Color(1.0, 0.45, 0.12), "accent")
+		"ice_plate":
+			_piece(p, _box(Vector3(0.54, 0.50, 0.32)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _cone(0.05, 0.18), Vector3(-0.27, 0.52, 0), Vector3(0, 0, 18), Color(0.7, 0.9, 1.0), "accent")
+			_piece(p, _cone(0.05, 0.18), Vector3(0.27, 0.52, 0), Vector3(0, 0, -18), Color(0.7, 0.9, 1.0), "accent")
+			_piece(p, _cone(0.04, 0.14), Vector3(0, 0.46, -0.10), Vector3(-20, 0, 0), Color(0.7, 0.9, 1.0), "accent")
+		"storm_robe":
+			_piece(p, _box(Vector3(0.52, 0.56, 0.30)), Vector3(0, 0.18, 0), Vector3.ZERO, col, "cloth")
+			_piece(p, _box(Vector3(0.46, 0.42, 0.34)), Vector3(0, -0.18, 0), Vector3.ZERO, col.darkened(0.08), "cloth")
+			for r in [Vector3(0, 0.34, -0.16), Vector3(0.03, 0.24, -0.16), Vector3(-0.02, 0.14, -0.17)]:
+				_piece(p, _box(Vector3(0.05, 0.10, 0.02)), r, Vector3(0, 0, 25), Color(0.6, 0.85, 1.0), "accent")
+		"holy_plate":
+			_piece(p, _box(Vector3(0.54, 0.50, 0.32)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _box(Vector3(0.18, 0.14, 0.32)), Vector3(-0.27, 0.46, 0), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _box(Vector3(0.18, 0.14, 0.32)), Vector3(0.27, 0.46, 0), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _torus(0.05, 0.08), Vector3(0, 0.30, -0.165), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _box(Vector3(0.10, 0.40, 0.04)), Vector3(-0.18, 0.20, 0.16), Vector3(0, 0, 25), Color(0.95, 0.95, 0.9), "cloth")
+			_piece(p, _box(Vector3(0.10, 0.40, 0.04)), Vector3(0.18, 0.20, 0.16), Vector3(0, 0, -25), Color(0.95, 0.95, 0.9), "cloth")
+		"shadow_robe":
+			_piece(p, _box(Vector3(0.50, 0.54, 0.30)), Vector3(0, 0.18, 0), Vector3.ZERO, col, "cloth")
+			for i in range(5):
+				_piece(p, _box(Vector3(0.08, 0.24, 0.10)), Vector3(-0.16 + i * 0.08, -0.22, 0), Vector3.ZERO, col.darkened(0.1), "cloth")
+			_piece(p, _box(Vector3(0.30, 0.10, 0.30)), Vector3(0, 0.44, 0), Vector3.ZERO, col.darkened(0.15), "cloth")
+		"druid_chest":
+			_piece(p, _box(Vector3(0.50, 0.50, 0.30)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "dark")
+			for i in range(3):
+				_piece(p, _box(Vector3(0.06, 0.46, 0.03)), Vector3(-0.14 + i * 0.14, 0.22, -0.155), Vector3.ZERO, col.darkened(0.12), "dark")
+			_piece(p, _cone(0.07, 0.16), Vector3(-0.26, 0.46, 0), Vector3(0, 0, 40), Color(0.3, 0.6, 0.25), "cloth")
+			_piece(p, _cone(0.07, 0.16), Vector3(0.26, 0.46, 0), Vector3(0, 0, -40), Color(0.3, 0.6, 0.25), "cloth")
+		"crystal_chest":
+			_piece(p, _box(Vector3(0.52, 0.50, 0.30)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "accent")
+			_piece(p, _cone(0.05, 0.16), Vector3(0, 0.30, -0.16), Vector3(-90, 0, 0), col.lightened(0.2), "accent")
+			_piece(p, _cone(0.04, 0.12), Vector3(-0.08, 0.24, -0.16), Vector3(-70, 0, 20), col.lightened(0.2), "accent")
+			_piece(p, _cone(0.04, 0.12), Vector3(0.08, 0.26, -0.16), Vector3(-70, 0, -20), col.lightened(0.2), "accent")
+		"tabard":
+			_piece(p, _box(Vector3(0.54, 0.50, 0.32)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _box(Vector3(0.18, 0.14, 0.32)), Vector3(-0.27, 0.46, 0), Vector3.ZERO, col.lightened(0.1), "metal")
+			_piece(p, _box(Vector3(0.18, 0.14, 0.32)), Vector3(0.27, 0.46, 0), Vector3.ZERO, col.lightened(0.1), "metal")
+			_piece(p, _box(Vector3(0.22, 0.62, 0.02)), Vector3(0, 0.14, -0.17), Vector3.ZERO, Color(0.7, 0.18, 0.2), "cloth")
+			_piece(p, _box(Vector3(0.08, 0.08, 0.02)), Vector3(0, 0.24, -0.185), Vector3(0, 0, 45), ACCENT_GOLD, "accent")
+		"gladiator":
+			_piece(p, _box(Vector3(0.50, 0.46, 0.30)), Vector3(0, 0.20, 0), Vector3.ZERO, col, "dark")
+			_piece(p, _box(Vector3(0.08, 0.50, 0.04)), Vector3(-0.12, 0.22, -0.16), Vector3(0, 0, -20), col.darkened(0.2), "dark")
+			_piece(p, _sphere(0.16), Vector3(0.27, 0.47, 0), Vector3.ZERO, col.lightened(0.1), "metal", Vector3(1, 0.85, 1))
+			_piece(p, _box(Vector3(0.06, 0.18, 0.32)), Vector3(0.30, 0.40, 0), Vector3.ZERO, col.lightened(0.05), "metal")
+		"samurai_do":
+			_piece(p, _box(Vector3(0.50, 0.50, 0.30)), Vector3(0, 0.20, 0), Vector3.ZERO, col.darkened(0.15), "dark")
+			for row in range(4):
+				for cx in range(4):
+					_piece(p, _box(Vector3(0.10, 0.07, 0.02)), Vector3(-0.15 + cx * 0.10, 0.36 - row * 0.10, -0.155), Vector3.ZERO, col.lightened(0.05), "metal")
+			_piece(p, _box(Vector3(0.20, 0.14, 0.32)), Vector3(-0.27, 0.46, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _box(Vector3(0.20, 0.14, 0.32)), Vector3(0.27, 0.46, 0), Vector3.ZERO, col, "metal")
+		"trenchcoat":
+			_piece(p, _box(Vector3(0.50, 0.52, 0.30)), Vector3(0, 0.20, 0), Vector3.ZERO, col, "dark")
+			_piece(p, _box(Vector3(0.22, 0.50, 0.32)), Vector3(-0.13, -0.18, 0), Vector3.ZERO, col.darkened(0.05), "dark")
+			_piece(p, _box(Vector3(0.22, 0.50, 0.32)), Vector3(0.13, -0.18, 0), Vector3.ZERO, col.darkened(0.05), "dark")
+			_piece(p, _box(Vector3(0.10, 0.14, 0.30)), Vector3(-0.18, 0.42, 0), Vector3(0, 0, 15), col.lightened(0.05), "dark")
+			_piece(p, _box(Vector3(0.10, 0.14, 0.30)), Vector3(0.18, 0.42, 0), Vector3(0, 0, -15), col.lightened(0.05), "dark")
+		"feathered_cloak":
+			_piece(p, _box(Vector3(0.48, 0.46, 0.28)), Vector3(0, 0.21, 0), Vector3.ZERO, col, "cloth")
+			for i in range(6):
+				_piece(p, _cone(0.06, 0.20), Vector3(-0.25 + i * 0.10, 0.46, 0.10), Vector3(60, 0, 0), col.lightened(0.1 if i % 2 == 0 else 0.0), "cloth")
+			_piece(p, _box(Vector3(0.44, 0.50, 0.04)), Vector3(0, 0.10, 0.16), Vector3(5, 0, 0), col.darkened(0.1), "cloth")
+		"carapace":
+			_piece(p, _sphere(0.30), Vector3(0, 0.24, 0.06), Vector3.ZERO, col, "accent", Vector3(1, 0.8, 0.9))
+			for i in range(3):
+				_piece(p, _box(Vector3(0.40, 0.10, 0.30)), Vector3(0, 0.34 - i * 0.12, -0.02), Vector3.ZERO, col.lightened(0.08), "accent")
+			_piece(p, _box(Vector3(0.16, 0.12, 0.30)), Vector3(-0.26, 0.44, 0), Vector3.ZERO, col.darkened(0.1), "accent")
+			_piece(p, _box(Vector3(0.16, 0.12, 0.30)), Vector3(0.26, 0.44, 0), Vector3.ZERO, col.darkened(0.1), "accent")
 		_:
 			_piece(p, _box(Vector3(0.54, 0.50, 0.32)), Vector3(0, 0.22, 0), Vector3.ZERO, col, "metal")
 
@@ -568,6 +819,84 @@ func _build_legs(p: Node, model: String, col: Color, side: int) -> void:
 			_piece(p, _sphere(0.11), Vector3(0, -0.40, -0.02), Vector3.ZERO, col.lightened(0.12), "metal")
 			_piece(p, _box(Vector3(0.21, 0.34, 0.23)), Vector3(0, -0.58, 0), Vector3.ZERO, col, "metal")
 			_piece(p, _box(Vector3(0.22, 0.02, 0.24)), Vector3(0, -0.20, 0), Vector3.ZERO, ACCENT_GOLD, "accent")
+		"fur_legs":
+			_piece(p, _box(Vector3(0.20, 0.50, 0.22)), Vector3(0, -0.30, 0), Vector3.ZERO, col, "dark")
+			_piece(p, _sphere(0.13), Vector3(0, -0.10, 0), Vector3.ZERO, col.lightened(0.22), "cloth")
+			_piece(p, _sphere(0.13), Vector3(0, -0.60, 0.02), Vector3.ZERO, col.lightened(0.22), "cloth")
+		"royal_legs":
+			_piece(p, _box(Vector3(0.20, 0.55, 0.22)), Vector3(0, -0.33, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _box(Vector3(0.21, 0.02, 0.23)), Vector3(0, -0.20, 0), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _box(Vector3(0.04, 0.50, 0.02)), Vector3(0, -0.33, -0.11), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _sphere(0.06), Vector3(0, -0.40, -0.03), Vector3.ZERO, ACCENT_GOLD, "accent")
+		"dragon_legs":
+			_piece(p, _box(Vector3(0.19, 0.55, 0.21)), Vector3(0, -0.33, 0), Vector3.ZERO, col, "metal")
+			for i in range(3):
+				_piece(p, _cone(0.035, 0.12), Vector3(side * 0.11, -0.22 - i * 0.15, 0), Vector3(0, 0, side * -60), col.lightened(0.15), "metal")
+			_piece(p, _cone(0.04, 0.12), Vector3(0, -0.30, -0.10), Vector3(-70, 0, 0), col.lightened(0.15), "metal")
+		"chain_legs":
+			_piece(p, _box(Vector3(0.19, 0.55, 0.21)), Vector3(0, -0.32, 0), Vector3.ZERO, col.darkened(0.2), "metal")
+			for row in range(6):
+				_piece(p, _sphere(0.018), Vector3(-0.05, -0.16 - row * 0.07, -0.105), Vector3.ZERO, col.lightened(0.05), "metal")
+				_piece(p, _sphere(0.018), Vector3(0.05, -0.16 - row * 0.07, -0.105), Vector3.ZERO, col.lightened(0.05), "metal")
+		"tassets":
+			_piece(p, _box(Vector3(0.20, 0.50, 0.21)), Vector3(0, -0.34, 0), Vector3.ZERO, col.darkened(0.1), "dark")
+			_piece(p, _box(Vector3(0.22, 0.28, 0.24)), Vector3(0, -0.18, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _box(Vector3(0.20, 0.18, 0.24)), Vector3(0, -0.42, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _sphere(0.02), Vector3(-0.07, -0.18, -0.12), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _sphere(0.02), Vector3(0.07, -0.18, -0.12), Vector3.ZERO, ACCENT_GOLD, "accent")
+		"boots_tall":
+			_piece(p, _box(Vector3(0.17, 0.40, 0.19)), Vector3(0, -0.20, 0), Vector3.ZERO, col, "cloth")
+			_piece(p, _box(Vector3(0.21, 0.42, 0.24)), Vector3(0, -0.58, 0.02), Vector3.ZERO, col.darkened(0.25), "dark")
+			_piece(p, _box(Vector3(0.23, 0.06, 0.26)), Vector3(0, -0.40, 0.0), Vector3.ZERO, col.darkened(0.1), "dark")
+		"flame_legs":
+			_piece(p, _box(Vector3(0.20, 0.55, 0.22)), Vector3(0, -0.33, 0), Vector3.ZERO, col, "metal")
+			for i in range(3):
+				_piece(p, _box(Vector3(0.03, 0.12, 0.02)), Vector3(side * 0.06, -0.24 - i * 0.14, -0.11), Vector3(0, 0, 10), Color(1.0, 0.45, 0.12), "accent")
+		"ice_legs":
+			_piece(p, _box(Vector3(0.20, 0.55, 0.22)), Vector3(0, -0.33, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _cone(0.04, 0.14), Vector3(side * 0.11, -0.40, 0), Vector3(0, 0, side * -50), Color(0.7, 0.9, 1.0), "accent")
+			_piece(p, _cone(0.03, 0.10), Vector3(side * 0.10, -0.20, 0), Vector3(0, 0, side * -50), Color(0.7, 0.9, 1.0), "accent")
+		"holy_legs":
+			_piece(p, _box(Vector3(0.20, 0.55, 0.22)), Vector3(0, -0.33, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _box(Vector3(0.21, 0.02, 0.23)), Vector3(0, -0.22, 0), Vector3.ZERO, ACCENT_GOLD, "accent")
+			_piece(p, _sphere(0.07), Vector3(0, -0.40, -0.02), Vector3.ZERO, ACCENT_GOLD, "accent")
+		"shadow_legs":
+			_piece(p, _box(Vector3(0.18, 0.50, 0.20)), Vector3(0, -0.30, 0), Vector3.ZERO, col, "cloth")
+			for i in range(3):
+				_piece(p, _box(Vector3(0.06, 0.16, 0.08)), Vector3(-0.06 + i * 0.06, -0.58, 0), Vector3.ZERO, col.darkened(0.1), "cloth")
+		"druid_legs":
+			_piece(p, _box(Vector3(0.19, 0.55, 0.21)), Vector3(0, -0.33, 0), Vector3.ZERO, col, "dark")
+			_piece(p, _cone(0.05, 0.12), Vector3(side * 0.10, -0.30, 0.02), Vector3(0, 0, side * -40), Color(0.3, 0.6, 0.25), "cloth")
+			_piece(p, _cone(0.04, 0.10), Vector3(side * 0.09, -0.50, 0.02), Vector3(0, 0, side * -40), Color(0.3, 0.6, 0.25), "cloth")
+		"crystal_legs":
+			_piece(p, _box(Vector3(0.19, 0.55, 0.21)), Vector3(0, -0.33, 0), Vector3.ZERO, col, "accent")
+			_piece(p, _cone(0.04, 0.12), Vector3(side * 0.10, -0.34, 0), Vector3(0, 0, side * -55), col.lightened(0.2), "accent")
+			_piece(p, _cone(0.03, 0.09), Vector3(side * 0.09, -0.52, 0), Vector3(0, 0, side * -55), col.lightened(0.2), "accent")
+		"faulds":
+			_piece(p, _box(Vector3(0.19, 0.50, 0.21)), Vector3(0, -0.34, 0), Vector3.ZERO, col.darkened(0.1), "dark")
+			_piece(p, _box(Vector3(0.22, 0.16, 0.24)), Vector3(0, -0.14, 0), Vector3.ZERO, col, "metal")
+			_piece(p, _box(Vector3(0.20, 0.14, 0.24)), Vector3(0, -0.30, 0), Vector3(8, 0, 0), col, "metal")
+		"hakama":
+			_piece(p, _box(Vector3(0.22, 0.34, 0.24)), Vector3(0, -0.24, 0), Vector3.ZERO, col, "cloth")
+			_piece(p, _box(Vector3(0.30, 0.30, 0.30)), Vector3(0, -0.52, 0), Vector3.ZERO, col, "cloth")
+			_piece(p, _box(Vector3(0.23, 0.04, 0.25)), Vector3(0, -0.10, 0), Vector3.ZERO, col.darkened(0.2), "cloth")
+		"shorts":
+			_piece(p, _box(Vector3(0.21, 0.26, 0.23)), Vector3(0, -0.20, 0), Vector3.ZERO, col, "cloth")
+			_piece(p, _box(Vector3(0.22, 0.04, 0.24)), Vector3(0, -0.30, 0), Vector3.ZERO, col.darkened(0.2), "cloth")
+		"spiked_legs":
+			_piece(p, _box(Vector3(0.19, 0.55, 0.21)), Vector3(0, -0.33, 0), Vector3.ZERO, col, "metal")
+			for i in range(3):
+				_piece(p, _cone(0.03, 0.12), Vector3(side * 0.11, -0.20 - i * 0.16, 0), Vector3(0, 0, side * -90), col.lightened(0.15), "metal")
+		"scale_legs":
+			_piece(p, _box(Vector3(0.19, 0.55, 0.21)), Vector3(0, -0.33, 0), Vector3.ZERO, col.darkened(0.15), "metal")
+			for row in range(5):
+				_piece(p, _box(Vector3(0.07, 0.05, 0.02)), Vector3(-0.04, -0.16 - row * 0.08, -0.105), Vector3.ZERO, col.lightened(0.05), "metal")
+				_piece(p, _box(Vector3(0.07, 0.05, 0.02)), Vector3(0.04, -0.16 - row * 0.08, -0.105), Vector3.ZERO, col.lightened(0.05), "metal")
+		"winged_boots":
+			_piece(p, _box(Vector3(0.18, 0.50, 0.20)), Vector3(0, -0.32, 0), Vector3.ZERO, col, "cloth")
+			_piece(p, _box(Vector3(0.21, 0.16, 0.26)), Vector3(0, -0.60, 0.02), Vector3.ZERO, col.darkened(0.2), "dark")
+			_piece(p, _box(Vector3(0.02, 0.10, 0.16)), Vector3(side * 0.10, -0.58, 0.0), Vector3(0, 0, side * 40), Color(0.95, 0.95, 1.0), "accent")
+			_piece(p, _box(Vector3(0.02, 0.07, 0.10)), Vector3(side * 0.12, -0.56, -0.06), Vector3(0, 0, side * 55), Color(0.95, 0.95, 1.0), "accent")
 		_:
 			_piece(p, _box(Vector3(0.20, 0.55, 0.22)), Vector3(0, -0.33, 0), Vector3.ZERO, col, "metal")
 

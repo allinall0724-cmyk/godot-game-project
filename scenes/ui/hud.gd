@@ -1,16 +1,25 @@
 extends Control
-## On-screen HUD: player health bar + stamina bar (top-left). Reads the local
-## player each frame; no coupling beyond the "local_player" group.
+## On-screen HUD: player health + stamina bars, plus a level/XP bar (top-left) and
+## a brief "LEVEL UP!" banner. Reads the local player each frame; no coupling
+## beyond the "local_player" group.
 
 @onready var bar: ProgressBar = $HealthBar
 @onready var label: Label = $HealthBar/Label
 @onready var stamina_bar: ProgressBar = $StaminaBar
 @onready var stamina_label: Label = $StaminaBar/Label
 
+var xp_bar: ProgressBar
+var xp_label: Label
+var banner: Label
+var _last_level := 1
+var _banner_time := 0.0
+
 
 func _ready() -> void:
 	_style_bar(bar, Color(0.85, 0.22, 0.22))
 	_style_bar(stamina_bar, Color(0.92, 0.78, 0.2))
+	_build_xp_ui()
+	_build_banner()
 
 
 ## Give a ProgressBar a clean dark rounded track with a colored fill.
@@ -27,7 +36,44 @@ func _style_bar(b: ProgressBar, fill_color: Color) -> void:
 	b.add_theme_stylebox_override("fill", fill)
 
 
-func _process(_delta: float) -> void:
+## Build the XP bar + level readout just below the stamina bar.
+func _build_xp_ui() -> void:
+	xp_bar = ProgressBar.new()
+	xp_bar.show_percentage = false
+	xp_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	xp_bar.position = Vector2(20, 80)
+	xp_bar.size = Vector2(260, 16)
+	xp_bar.max_value = 100.0
+	xp_bar.value = 0.0
+	add_child(xp_bar)
+	_style_bar(xp_bar, Color(0.55, 0.45, 0.95))
+
+	xp_label = Label.new()
+	xp_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	xp_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	xp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	xp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	xp_label.add_theme_font_size_override("font_size", 12)
+	xp_bar.add_child(xp_label)
+
+
+## A big centered "LEVEL UP!" banner, hidden until a level is gained.
+func _build_banner() -> void:
+	banner = Label.new()
+	banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	banner.set_anchors_preset(Control.PRESET_FULL_RECT)
+	banner.offset_top = -80.0  # sit a little above screen centre
+	banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	banner.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	banner.add_theme_font_size_override("font_size", 44)
+	banner.add_theme_color_override("font_color", Color(1.0, 0.88, 0.4))
+	banner.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	banner.add_theme_constant_override("outline_size", 8)
+	banner.modulate.a = 0.0
+	add_child(banner)
+
+
+func _process(delta: float) -> void:
 	var player = get_tree().get_first_node_in_group("local_player")
 	if player == null:
 		return
@@ -38,3 +84,27 @@ func _process(_delta: float) -> void:
 	stamina_bar.max_value = player.max_stamina
 	stamina_bar.value = player.stamina
 	stamina_label.text = "STA  %d / %d" % [int(player.stamina), int(player.max_stamina)]
+
+	# Level / XP.
+	var lvl: int = player.level
+	var need: int = player.xp_to_next()
+	xp_bar.max_value = float(maxi(need, 1))
+	xp_bar.value = float(player.xp)
+	xp_label.text = "Lv %d    XP %d / %d" % [lvl, player.xp, need]
+
+	# Detect a level-up and flash the banner.
+	if lvl > _last_level:
+		_show_banner("LEVEL UP!   Lv %d" % lvl)
+	_last_level = lvl
+
+	if _banner_time > 0.0:
+		_banner_time -= delta
+		banner.modulate.a = clampf(_banner_time / 1.6, 0.0, 1.0)
+		if _banner_time <= 0.0:
+			banner.modulate.a = 0.0
+
+
+func _show_banner(text: String) -> void:
+	banner.text = text
+	banner.modulate.a = 1.0
+	_banner_time = 1.6

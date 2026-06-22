@@ -15,6 +15,7 @@ extends CharacterBody3D
 @export var attack_range := 1.9    # lunges in to hit within this distance
 @export var attack_damage := 8
 @export var attack_cooldown := 1.2 # seconds between hits
+@export var xp_reward := 6          # XP granted to the player on death (orcs override higher)
 
 const GRAVITY := 22.0
 
@@ -78,6 +79,10 @@ func take_damage(amount: int) -> void:
 
 
 func _die() -> void:
+	# Reward the player with XP toward their next level.
+	var player = get_tree().get_first_node_in_group("local_player")
+	if player != null and player.has_method("gain_xp"):
+		player.gain_xp(xp_reward)
 	queue_free()
 
 
