@@ -1369,7 +1369,8 @@ func _eff_structure(mv: Dictionary) -> void:
 	if kind != "platform" and dir.length() > 0.01:
 		basis = Basis.looking_at(dir, Vector3.UP)
 	if kind == "ramp":
-		basis = basis.rotated(basis.x.normalized(), deg_to_rad(-22.0))
+		# +22 so the ramp's high side faces away from the player (per upstream fix).
+		basis = basis.rotated(basis.x.normalized(), deg_to_rad(22.0))
 	var top_y := 2.2 if kind == "platform" else dims.y * 0.5
 	body.transform = Transform3D(basis, pos + Vector3.UP * top_y)
 	# Defer the add so the body registers outside the physics flush.
