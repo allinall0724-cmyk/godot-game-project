@@ -273,6 +273,23 @@ var stamina := 100.0
 var _regen_delay := 0.0
 var is_sprinting := false
 
+# --- Leveling / XP ---
+# Kill enemies -> gain XP -> level up. Each level: +1 usable spell slot (up to
+# MAX_SPELLS), unlocks the next spell in LEVEL_SPELL_ORDER, and grows max HP/stamina.
+const HP_PER_LEVEL := 10        # max health added per level
+const STA_PER_LEVEL := 6.0      # max stamina added per level
+const MAX_LEVEL := 12
+# Spells unlocked one-per-level (index 0 = the spell you start with at level 1).
+const LEVEL_SPELL_ORDER := [
+	"fireball", "lightning_zap", "levitate", "gust", "meteor",
+	"frost_bolt", "boulder_toss", "blink", "chain_lightning", "ice_wall",
+	"arc_chain", "meteor_shower",
+]
+var level := 1
+var xp := 0
+var spell_slots := 1               # how many ability slots are usable (grows with level)
+var unlocked_spells: Array = []    # spell ids the player has learned (in unlock order)
+
 # Shared low-poly mesh reused by every VFX particle (avoids per-spawn mesh upload
 # stutter). Created once in _ready.
 var _fx_sphere: SphereMesh
@@ -299,6 +316,16 @@ func _ready() -> void:
 	if GRANT_TEST_ARMOR:
 		for item in ArmorCatalog.all_items():
 			add_item(item)
+
+	# Start at level 1 knowing only the first spell, with a single ability slot.
+	# More slots/spells unlock as you gain XP from kills (see gain_xp / _level_up).
+	unlocked_spells = [LEVEL_SPELL_ORDER[0]]
+	spell_slots = 1
+	_rebuild_loadout()
+	max_health = get_max_health()
+	health = max_health
+	max_stamina = get_max_stamina()
+	stamina = max_stamina
 
 
 func set_camera(c: Node3D) -> void:
@@ -531,9 +558,9 @@ func get_move_speed() -> float:
 	return maxf(2.0, s)
 
 
-## Passive: max health = 100 + equipped items' "health_bonus".
+## Passive: max health = 100 + per-level growth + equipped items' "health_bonus".
 func get_max_health() -> int:
-	var h := 100
+	var h := 100 + (level - 1) * HP_PER_LEVEL
 	for slot in equipment:
 		var it = equipment[slot]
 		if it != null:
@@ -541,9 +568,9 @@ func get_max_health() -> int:
 	return h
 
 
-## Passive: max stamina = 100 + equipped items' "stamina_bonus".
+## Passive: max stamina = 100 + per-level growth + equipped items' "stamina_bonus".
 func get_max_stamina() -> float:
-	var s := 100.0
+	var s := 100.0 + float(level - 1) * STA_PER_LEVEL
 	for slot in equipment:
 		var it = equipment[slot]
 		if it != null:
@@ -681,17 +708,64 @@ func _handle_abilities() -> void:
 		break  # one cast per frame
 
 
-## Rotate the last equipped slot (V) through the entire spell catalog. Lets every
-## spell be tested without a loadout UI; respects the 5-equipped limit (it swaps
-## what is in slot 5 rather than adding a 6th).
+## Rotate the LAST usable slot through the spells you've UNLOCKED (once you know
+## more spells than you have slots for). Lets extra learned spells be swapped in
+## without a full loadout UI; never exceeds spell_slots active slots.
 func _cycle_spellbook_slot() -> void:
-	var keys: Array = SPELLS.keys()
-	if keys.is_empty():
+	if unlocked_spells.size() <= equipped_spells.size():
+		return  # everything you know already fits on the bar
+	var last := equipped_spells.size() - 1
+	if last < 0:
 		return
-	_book_index = (_book_index + 1) % keys.size()
-	equipped_spells[4] = keys[_book_index]
-	_spell_cd[4] = 0.0
-	print("Spellbook  [V] -> ", str(SPELLS[keys[_book_index]].get("name", "?")))
+	_book_index = (_book_index + 1) % unlocked_spells.size()
+	equipped_spells[last] = unlocked_spells[_book_index]
+	_spell_cd[last] = 0.0
+	print("Spellbook  [V] -> ", str(SPELLS[unlocked_spells[_book_index]].get("name", "?")))
+
+
+# --- Leveling / XP ---
+
+## XP required to advance FROM the current level to the next.
+func xp_to_next() -> int:
+	return 20 + (level - 1) * 15   # 20, 35, 50, 65, ...
+
+
+## Award XP (called by enemies on death). Rolls over into as many levels as earned.
+func gain_xp(amount: int) -> void:
+	if level >= MAX_LEVEL:
+		return
+	xp += amount
+	while level < MAX_LEVEL and xp >= xp_to_next():
+		xp -= xp_to_next()
+		_level_up()
+	if level >= MAX_LEVEL:
+		xp = 0
+
+
+## Build the active ability bar from the first `spell_slots` unlocked spells.
+func _rebuild_loadout() -> void:
+	equipped_spells.clear()
+	for i in range(mini(spell_slots, unlocked_spells.size())):
+		equipped_spells.append(unlocked_spells[i])
+
+
+func _level_up() -> void:
+	level += 1
+	spell_slots = mini(MAX_SPELLS, level)
+	# Learn the spell assigned to this level (if the order defines one).
+	var idx := level - 1
+	if idx < LEVEL_SPELL_ORDER.size():
+		var sid: String = LEVEL_SPELL_ORDER[idx]
+		if not unlocked_spells.has(sid):
+			unlocked_spells.append(sid)
+	_rebuild_loadout()
+	# Per-level stat growth (getters fold in `level`); refill to the new maximums.
+	max_health = get_max_health()
+	max_stamina = get_max_stamina()
+	health = max_health
+	stamina = max_stamina
+	# Golden burst as feedback (the HUD also flashes a LEVEL UP banner).
+	_spawn_burst(global_position + Vector3.UP * 1.0, 1.0, Color(1.0, 0.85, 0.35), 16)
 
 
 func _cast_spell(spell: Dictionary) -> void:
