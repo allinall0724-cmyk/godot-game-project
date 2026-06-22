@@ -14,6 +14,7 @@ const ELEMENT_TINT := {
 	"arcane": Color(0.82, 0.62, 1.0),
 	"shadow": Color(0.66, 0.45, 0.82),
 	"nature": Color(0.55, 0.85, 0.45),
+	"light": Color(1.0, 0.96, 0.72),
 }
 
 @onready var slots := [

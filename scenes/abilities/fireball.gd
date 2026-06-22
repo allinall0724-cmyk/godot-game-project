@@ -17,6 +17,15 @@ var _hit: Array = []       # enemies already damaged (for pierce)
 var slow_factor := 0.0
 var slow_dur := 0.0
 var knock_force := 0.0
+var dot_dps := 0.0         # lingering poison/burn applied on hit (Venom Bolt)
+var dot_dur := 0.0
+
+# Boomerang: fly out to max_range, then curve back to the thrower.
+var boomerang := false
+var max_range := 10.0
+var _origin := Vector3.ZERO
+var _origin_set := false
+var _returning := false
 
 # Motion modifiers.
 var grav_accel := 0.0      # downward accel; >0 makes the shot arc and drop (Area3D has its own 'gravity')
@@ -76,7 +85,31 @@ func set_explode(radius: float, color: Color) -> void:
 	explode_color = color
 
 
+## Optional: apply lingering damage-over-time to what it hits.
+func set_dot(dps: float, dur: float) -> void:
+	dot_dps = dps
+	dot_dur = dur
+
+
+## Optional: a returning boomerang that flies out `rng` then curves back.
+func set_boomerang(rng: float) -> void:
+	boomerang = true
+	max_range = rng
+	pierce = true  # passes through, hits again on the way back
+
+
 func _physics_process(delta: float) -> void:
+	if boomerang:
+		if not _origin_set:
+			_origin = global_position
+			_origin_set = true
+		if not _returning and _origin.distance_to(global_position) >= max_range:
+			_returning = true
+			_vel = -_vel
+			_hit.clear()  # can strike enemies again on the way back
+		elif _returning and _origin.distance_to(global_position) < 1.0:
+			queue_free()
+			return
 	if homing > 0.0:
 		var t = _nearest_enemy()
 		if t != null:
@@ -118,9 +151,13 @@ func _on_body_entered(body: Node) -> void:
 			body.apply_slow(slow_factor, slow_dur)
 		if knock_force > 0.0 and body.has_method("apply_knockback"):
 			body.apply_knockback(direction * knock_force)
+		if dot_dps > 0.0 and body.has_method("apply_dot"):
+			body.apply_dot(dot_dps, dot_dur)
 		_impact_flash()
 		if pierce:
 			return  # keep flying through enemies
+	if boomerang:
+		return  # boomerang doesn't break on terrain; it returns on its own
 	queue_free()  # pop on a solid hit (wall/ground/tree), or any hit if not piercing
 
 

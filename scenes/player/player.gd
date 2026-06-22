@@ -52,6 +52,7 @@ const EARTH_COL := Color(0.62, 0.46, 0.28)
 const ARCANE_COL := Color(0.78, 0.55, 1.0)
 const SHADOW_COL := Color(0.55, 0.3, 0.7)
 const NATURE_COL := Color(0.45, 0.8, 0.35)
+const LIGHT_COL := Color(1.0, 0.95, 0.7)
 const MINION_SCENE := "res://scenes/abilities/minion.tscn"
 const DECOY_SCENE := "res://scenes/abilities/decoy.tscn"
 
@@ -169,6 +170,16 @@ const SPELLS := {
 	"tempest":        {"name": "Tempest", "effect": "channel", "cost": 26, "cd": 3.0, "radius": 4.5, "ticks": 8, "dmg": 2, "force": 6.0, "element": "wind", "color": WIND_COL},
 	"cinder_aura":    {"name": "Cinder Aura", "effect": "aura", "cost": 22, "cd": 8.0, "duration": 8.0, "radius": 3.5, "dot": 3.0, "element": "fire", "color": FIRE_COL},
 	"chain_frost":    {"name": "Chain Frost", "effect": "chain", "cost": 22, "cd": 1.6, "jumps": 5, "range": 7.0, "dmg": 3, "slow": 0.5, "slow_dur": 2.5, "element": "ice", "color": ICE_COL},
+
+	# === Pass 5 — new mechanics + light element ===
+	"shockwave":      {"name": "Shockwave", "effect": "shockwave", "cost": 22, "cd": 1.6, "radius": 9.0, "dmg": 4, "force": 12.0, "element": "earth", "color": EARTH_COL},
+	"rune_trap":      {"name": "Rune Trap", "effect": "trap", "cost": 18, "cd": 2.5, "trigger": 2.5, "radius": 4.0, "dmg": 9, "life": 12.0, "element": "arcane", "color": ARCANE_COL},
+	"frost_trail":    {"name": "Frost Trail", "effect": "frost_trail", "cost": 16, "cd": 2.0, "drops": 6, "radius": 2.2, "slow": 0.45, "element": "ice", "color": ICE_COL},
+	"radiant_pillar": {"name": "Radiant Pillar", "effect": "pillar", "cost": 26, "cd": 2.2, "radius": 3.0, "dmg": 10, "element": "light", "color": LIGHT_COL},
+	"orbiting_wards": {"name": "Orbiting Wards", "effect": "orbit", "cost": 24, "cd": 6.0, "count": 3, "radius": 1.8, "dmg": 3, "life": 8.0, "element": "arcane", "color": ARCANE_COL},
+	"venom_bolt":     {"name": "Venom Bolt", "effect": "projectile", "cost": 14, "cd": 0.6, "count": 1, "size": 0.8, "speed": 26.0, "dmg": 2, "dot": 3.0, "dot_dur": 4.0, "element": "nature", "color": NATURE_COL},
+	"gale_boomerang": {"name": "Gale Boomerang", "effect": "boomerang", "cost": 18, "cd": 1.0, "speed": 22.0, "range": 10.0, "size": 1.0, "dmg": 4, "element": "wind", "color": WIND_COL},
+	"thorns_aura":    {"name": "Thorns Aura", "effect": "buff", "cost": 16, "cd": 8.0, "buff": "thorns", "amount": 4, "duration": 10.0, "element": "nature", "color": NATURE_COL},
 }
 
 # Until leveling exists, start with a varied 5-spell loadout (bound to Q/R/F/C/V).
@@ -730,6 +741,12 @@ func _run_effect(mv: Dictionary) -> void:
 		"heal_zone": _eff_heal_zone(mv)
 		"channel": _eff_channel(mv)
 		"aura": _eff_aura(mv)
+		"shockwave": _eff_shockwave(mv)
+		"trap": _eff_trap(mv)
+		"frost_trail": _eff_frost_trail(mv)
+		"pillar": _eff_pillar(mv)
+		"orbit": _eff_orbit(mv)
+		"boomerang": _eff_boomerang(mv)
 
 
 func _telegraph(mv: Dictionary, t: float) -> void:
@@ -849,6 +866,9 @@ func _eff_projectile(mv: Dictionary) -> void:
 		var er := float(mv.get("explode_radius", 0.0))
 		if er > 0.0 and fb.has_method("set_explode"):
 			fb.set_explode(er, col)
+		var dot := float(mv.get("dot", 0.0))
+		if dot > 0.0 and fb.has_method("set_dot"):
+			fb.set_dot(dot, float(mv.get("dot_dur", 4.0)))
 	# Muzzle flash.
 	_spawn_burst(global_position + dir * 1.0 + Vector3.UP * 1.2, 0.4, col, 4)
 
@@ -898,6 +918,8 @@ func _eff_nova(mv: Dictionary) -> void:
 		if global_position.distance_to(e.global_position) <= radius and e.has_method("take_damage"):
 			e.take_damage(dmg)
 	_spawn_ring(global_position + Vector3.UP * 0.4, radius, col, 14)
+	_spawn_shockring(global_position, radius, col, 0.4)
+	_spawn_flash(global_position + Vector3.UP * 0.5, col, 2.5, radius * 1.8, 0.2)
 
 
 # Lightning: strike the N nearest enemies in front (from above)
@@ -1175,6 +1197,8 @@ func _eff_frost_nova(mv: Dictionary) -> void:
 			if e.has_method("apply_slow"):
 				e.apply_slow(slow_f, slow_d)
 	_spawn_ring(global_position + Vector3.UP * 0.4, radius, col, 16)
+	_spawn_shockring(global_position, radius, col, 0.4)
+	_spawn_flash(global_position + Vector3.UP * 0.5, col, 2.2, radius * 1.8, 0.2)
 
 
 # Utility/control: apply a status (slow / root / fear) to enemies in an aimed area.
@@ -1444,6 +1468,10 @@ func _eff_buff(mv: Dictionary) -> void:
 		"restore":
 			stamina = clampf(stamina + amt, 0.0, max_stamina)
 			health = clampi(health + int(amt * 0.5), 0, max_health)
+		"thorns":
+			# Passive melee reflect for the duration (reuses the counter machinery).
+			_counter_time = dur
+			_counter_dmg = _amp(int(amt))
 	for i in range(10):
 		var a := TAU * float(i) / 10.0
 		_spawn_emitter(global_position + Vector3(cos(a) * 0.5, 0.2, sin(a) * 0.5), col, 0.16, 0.6, Vector3.UP * 1.6)
@@ -1923,7 +1951,197 @@ func _eff_aura(mv: Dictionary) -> void:
 	_spawn_ring(global_position + Vector3.UP * 0.4, _aura_radius, _aura_color, 16)
 
 
+# ============================================================================
+#  Pass 5 effects — shockwave / trap / frost trail / pillar / orbit / boomerang
+# ============================================================================
+
+# Earth: an expanding force ring travels outward, hitting each enemy once as the
+# front sweeps past them (distinct from an instant nova).
+func _eff_shockwave(mv: Dictionary) -> void:
+	var max_r := float(mv.get("radius", 9.0))
+	var dmg := _amp(int(mv.get("dmg", 4)))
+	var force := float(mv.get("force", 12.0))
+	var col: Color = mv.get("color", EARTH_COL)
+	var center := global_position
+	var hit: Array = []  # shared by reference so each enemy is hit once
+	var steps := 9
+	for s in range(steps):
+		var r0 := max_r * float(s) / float(steps)
+		var r1 := max_r * float(s + 1) / float(steps)
+		get_tree().create_timer(float(s) * 0.05).timeout.connect(func(): _shockwave_tick(center, r0, r1, dmg, force, col, hit))
+	_spawn_shockring(center, max_r, col, 0.45)
+	_spawn_flash(center + Vector3.UP * 0.5, col, 3.0, max_r, 0.2)
+
+
+func _shockwave_tick(center: Vector3, r0: float, r1: float, dmg: int, force: float, col: Color, hit: Array) -> void:
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if e in hit:
+			continue
+		var flat := Vector3(e.global_position.x - center.x, 0.0, e.global_position.z - center.z)
+		var d := flat.length()
+		if d >= r0 and d <= r1:
+			hit.append(e)
+			if e.has_method("take_damage"):
+				e.take_damage(dmg)
+			if e.has_method("apply_knockback"):
+				var dir := flat.normalized() if d > 0.01 else _aim_direction()
+				e.apply_knockback(dir * force + Vector3.UP * 2.0)
+
+
+# Arcane: a proximity rune — detonates a big AoE when an enemy steps near it.
+func _eff_trap(mv: Dictionary) -> void:
+	var pos := global_position + _aim_direction() * 4.0
+	pos.y = _ground_y(pos) + 0.15
+	var trigger := float(mv.get("trigger", 2.5))
+	var radius := float(mv.get("radius", 4.0))
+	var dmg := _amp(int(mv.get("dmg", 9)))
+	var life := float(mv.get("life", 12.0))
+	var col: Color = mv.get("color", ARCANE_COL)
+	var rune := _make_orb(pos, 0.22, col)
+	var tw := rune.create_tween().set_loops()
+	tw.tween_property(rune, "scale", Vector3.ONE * 1.4, 0.5)
+	tw.tween_property(rune, "scale", Vector3.ONE * 0.9, 0.5)
+	var state := [false]  # detonated flag, shared by reference across the timers
+	var checks := int(life / 0.15)
+	for c in range(checks):
+		get_tree().create_timer(float(c) * 0.15).timeout.connect(func(): _trap_check(pos, trigger, radius, dmg, col, rune, state))
+	get_tree().create_timer(life).timeout.connect(func(): _free_node(rune))
+
+
+func _trap_check(pos: Vector3, trigger: float, radius: float, dmg: int, col: Color, rune: Node, state: Array) -> void:
+	if state[0]:
+		return
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if pos.distance_to(e.global_position) > trigger:
+			continue
+		state[0] = true
+		for t in get_tree().get_nodes_in_group("enemies"):
+			if pos.distance_to(t.global_position) <= radius and t.has_method("take_damage"):
+				t.take_damage(dmg)
+				if t.has_method("apply_knockback"):
+					var fl := Vector3(t.global_position.x - pos.x, 0.0, t.global_position.z - pos.z)
+					t.apply_knockback((fl.normalized() if fl.length() > 0.01 else Vector3.FORWARD) * 9.0 + Vector3.UP * 3.0)
+		_spawn_flash(pos, col, 5.0, radius * 2.0, 0.25)
+		_spawn_shockring(pos, radius, col, 0.4)
+		_spawn_burst(pos + Vector3.UP * 0.3, radius * 0.5, col, 12)
+		_free_node(rune)
+		return
+
+
+# Ice: drop a series of slowing ice patches behind the player as they move.
+func _eff_frost_trail(mv: Dictionary) -> void:
+	var drops := int(mv.get("drops", 6))
+	var radius := float(mv.get("radius", 2.2))
+	var slow_f := float(mv.get("slow", 0.45))
+	var col: Color = mv.get("color", ICE_COL)
+	for i in range(drops):
+		get_tree().create_timer(float(i) * 0.12).timeout.connect(func(): _frost_drop(radius, slow_f, col))
+
+
+func _frost_drop(radius: float, slow_f: float, col: Color) -> void:
+	var c := global_position
+	c.y = _ground_y(c)
+	_spawn_hazard(c, radius, col, 3.0, 0.05, {"slow": slow_f, "slow_dur": 1.0, "color": col})
+
+
+# Light: a wide column of radiant light crashes down on the aimed spot — damage +
+# a brief blind (fear) to enemies caught in it.
+func _eff_pillar(mv: Dictionary) -> void:
+	var center := global_position + _aim_direction() * 6.0
+	center.y = _ground_y(center)
+	var radius := float(mv.get("radius", 3.0))
+	var dmg := _amp(int(mv.get("dmg", 10)))
+	var col: Color = mv.get("color", LIGHT_COL)
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) <= radius:
+			if e.has_method("take_damage"):
+				e.take_damage(dmg)
+			if e.has_method("apply_fear"):
+				e.apply_fear(1.5)
+	var col_mesh := MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = radius
+	cyl.bottom_radius = radius
+	cyl.height = 12.0
+	col_mesh.mesh = cyl
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = col
+	mat.emission_enabled = true
+	mat.emission = col
+	mat.emission_energy_multiplier = 3.5
+	col_mesh.material_override = mat
+	get_tree().current_scene.add_child(col_mesh)
+	col_mesh.global_position = center + Vector3.UP * 6.0
+	col_mesh.scale = Vector3(0.1, 1.0, 0.1)
+	var tw := col_mesh.create_tween()
+	tw.tween_property(col_mesh, "scale", Vector3.ONE, 0.12)
+	tw.tween_interval(0.2)
+	tw.tween_property(mat, "emission_energy_multiplier", 0.0, 0.4)
+	tw.tween_callback(col_mesh.queue_free)
+	_spawn_flash(center + Vector3.UP * 1.0, col, 6.0, radius * 3.0, 0.4)
+	_spawn_shockring(center, radius, col, 0.4)
+
+
+# Arcane: orbs that orbit the player, damaging enemies they sweep through.
+func _eff_orbit(mv: Dictionary) -> void:
+	var pivot := Node3D.new()
+	pivot.set_script(load("res://scenes/abilities/orbit_ward.gd"))
+	pivot.setup(int(mv.get("count", 3)), float(mv.get("radius", 1.8)), _amp(int(mv.get("dmg", 3))), float(mv.get("life", 8.0)), mv.get("color", ARCANE_COL))
+	add_child(pivot)
+
+
+# Wind: a boomerang that flies out, curves back, and can hit enemies both ways.
+func _eff_boomerang(mv: Dictionary) -> void:
+	var packed: PackedScene = load(FIREBALL_SCENE)
+	if packed == null:
+		return
+	var dir := _aim_direction_3d()
+	var fb = packed.instantiate()
+	get_tree().current_scene.add_child(fb)
+	fb.global_position = global_position + dir * 1.0 + Vector3.UP * 1.2
+	fb.setup(dir, _amp(int(mv.get("dmg", 4))), float(mv.get("speed", 22.0)), float(mv.get("size", 1.0)), mv.get("color", WIND_COL), true)
+	if fb.has_method("set_motion"):
+		fb.set_motion(0.0, 0.0, true)
+	if fb.has_method("set_boomerang"):
+		fb.set_boomerang(float(mv.get("range", 10.0)))
+
+
 # --- Ability VFX (brief code-only emissive primitives) ---
+
+
+## A brief point-light flash — punchy lighting for novas, impacts and ultimates.
+func _spawn_flash(pos: Vector3, color: Color, energy: float, rng: float, life: float = 0.22) -> void:
+	var l := OmniLight3D.new()
+	l.light_color = color
+	l.light_energy = energy
+	l.omni_range = rng
+	get_tree().current_scene.add_child(l)
+	l.global_position = pos
+	var tw := l.create_tween()
+	tw.tween_property(l, "light_energy", 0.0, life)
+	tw.tween_callback(l.queue_free)
+
+
+## A flat glowing ring that expands and fades — a readable shock front.
+func _spawn_shockring(center: Vector3, radius: float, color: Color, life: float = 0.4) -> void:
+	var mi := MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = 0.16
+	torus.outer_radius = 0.25
+	mi.mesh = torus
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.emission_enabled = true
+	mat.emission = color
+	mat.emission_energy_multiplier = 4.0
+	mi.material_override = mat
+	get_tree().current_scene.add_child(mi)
+	mi.global_position = center + Vector3.UP * 0.12
+	var s := radius / 0.25
+	var tw := mi.create_tween().set_parallel(true)
+	tw.tween_property(mi, "scale", Vector3(s, 1.0, s), life)
+	tw.tween_property(mat, "emission_energy_multiplier", 0.0, life)
+	tw.chain().tween_callback(mi.queue_free)
 
 ## A glowing particle that drifts, shrinks and dims, then frees itself. Uses a
 ## shared low-poly mesh and an OPAQUE material (no transparent pass) to keep ability
