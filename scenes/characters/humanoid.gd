@@ -351,22 +351,37 @@ func _piece(parent: Node, mesh: Mesh, pos: Vector3, rot_deg: Vector3, col: Color
 func _finish_mat(col: Color, finish: String) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_color = col
+	# Soften lighting so curved primitives read smoothly instead of faceted.
+	m.specular_mode = BaseMaterial3D.SPECULAR_SCHLICK_GGX
 	match finish:
 		"metal":
-			m.metallic = 0.6
-			m.roughness = 0.35
-		"accent":
-			m.metallic = 0.7
+			m.metallic = 0.85
 			m.roughness = 0.28
+			# Forged sheen: a faint clearcoat lifts highlights off polished plate.
+			m.clearcoat_enabled = true
+			m.clearcoat = 0.35
+			m.clearcoat_roughness = 0.4
+		"accent":
+			# Gems, runes, crystals, flames: polished AND self-lit so they pop.
+			m.metallic = 0.85
+			m.roughness = 0.18
+			m.emission_enabled = true
+			m.emission = col
+			# Brighter, more saturated accents glow more (gems/flames > dull trim).
+			m.emission_energy_multiplier = 0.18 + col.get_luminance() * 0.45
 		"bone":
 			m.metallic = 0.0
-			m.roughness = 0.7
-		"dark":
-			m.metallic = 0.0
 			m.roughness = 0.6
+			m.specular = 0.35
+		"dark":
+			m.metallic = 0.05
+			m.roughness = 0.55
 		_:  # cloth
 			m.metallic = 0.0
-			m.roughness = 0.95
+			m.roughness = 0.92
+			# A touch of subsurface warmth keeps fabric from looking flat/plastic.
+			m.subsurf_scatter_enabled = true
+			m.subsurf_scatter_strength = 0.12
 	return m
 
 
@@ -380,8 +395,8 @@ func _sphere(r: float) -> SphereMesh:
 	var s := SphereMesh.new()
 	s.radius = r
 	s.height = r * 2.0
-	s.radial_segments = 12
-	s.rings = 7
+	s.radial_segments = 24
+	s.rings = 14
 	return s
 
 
@@ -390,7 +405,7 @@ func _cone(base_r: float, h: float) -> CylinderMesh:
 	c.top_radius = 0.0
 	c.bottom_radius = base_r
 	c.height = h
-	c.radial_segments = 8
+	c.radial_segments = 16
 	return c
 
 
@@ -399,7 +414,7 @@ func _cyl(r: float, h: float) -> CylinderMesh:
 	c.top_radius = r
 	c.bottom_radius = r
 	c.height = h
-	c.radial_segments = 12
+	c.radial_segments = 24
 	return c
 
 
@@ -407,8 +422,8 @@ func _torus(inner: float, outer: float) -> TorusMesh:
 	var t := TorusMesh.new()
 	t.inner_radius = inner
 	t.outer_radius = outer
-	t.rings = 14
-	t.ring_segments = 8
+	t.rings = 24
+	t.ring_segments = 16
 	return t
 
 
