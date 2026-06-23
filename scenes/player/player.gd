@@ -52,6 +52,19 @@ const EARTH_COL := Color(0.62, 0.46, 0.28)
 const ARCANE_COL := Color(0.78, 0.55, 1.0)
 const SHADOW_COL := Color(0.55, 0.3, 0.7)
 const NATURE_COL := Color(0.45, 0.8, 0.35)
+# Themes added with the expanded spellbook (tint only).
+const WATER_COL := Color(0.35, 0.65, 1.0)
+const LAVA_COL := Color(1.0, 0.35, 0.08)
+const ACID_COL := Color(0.55, 0.95, 0.25)
+const HOLY_COL := Color(1.0, 0.95, 0.6)
+const GRAV_COL := Color(0.55, 0.4, 0.85)
+const TIME_COL := Color(0.6, 0.95, 0.95)
+const SOUND_COL := Color(0.9, 0.8, 1.0)
+const BLOOD_COL := Color(0.8, 0.1, 0.15)
+const SAND_COL := Color(0.85, 0.72, 0.4)
+const CRYSTAL_COL := Color(0.5, 0.85, 0.95)
+const NECRO_COL := Color(0.5, 0.85, 0.55)
+const CHAOS_COL := Color(0.9, 0.4, 0.9)
 const MINION_SCENE := "res://scenes/abilities/minion.tscn"
 const DECOY_SCENE := "res://scenes/abilities/decoy.tscn"
 
@@ -169,6 +182,60 @@ const SPELLS := {
 	"tempest":        {"name": "Tempest", "effect": "channel", "cost": 26, "cd": 3.0, "radius": 4.5, "ticks": 8, "dmg": 2, "force": 6.0, "element": "wind", "color": WIND_COL},
 	"cinder_aura":    {"name": "Cinder Aura", "effect": "aura", "cost": 22, "cd": 8.0, "duration": 8.0, "radius": 3.5, "dot": 3.0, "element": "fire", "color": FIRE_COL},
 	"chain_frost":    {"name": "Chain Frost", "effect": "chain", "cost": 22, "cd": 1.6, "jumps": 5, "range": 7.0, "dmg": 3, "slow": 0.5, "slow_dur": 2.5, "element": "ice", "color": ICE_COL},
+
+	# === Expanded spellbook (37 new uniques) ===
+	# Water
+	"tidal_wave":      {"name": "Tidal Wave", "effect": "wave", "cost": 24, "cd": 1.4, "range": 14.0, "width": 4.0, "dmg": 5, "force": 13.0, "element": "water", "color": WATER_COL},
+	"bubble_shield":   {"name": "Bubble Shield", "effect": "buff", "buff": "absorb", "cost": 18, "cd": 8.0, "amount": 40.0, "duration": 10.0, "element": "water", "color": WATER_COL},
+	"geyser":          {"name": "Geyser", "effect": "geyser", "cost": 18, "cd": 1.0, "range": 6.0, "radius": 3.0, "dmg": 6, "power": 11.0, "element": "water", "color": WATER_COL},
+	"drowning_grasp":  {"name": "Drowning Grasp", "effect": "grasp", "cost": 16, "cd": 1.4, "range": 9.0, "root": 2.0, "dps": 4.0, "duration": 3.0, "element": "water", "color": WATER_COL},
+	"tsunami":         {"name": "Tsunami", "effect": "wave", "cost": 45, "cd": 6.0, "windup": 0.4, "range": 20.0, "width": 6.0, "dmg": 9, "force": 20.0, "element": "water", "color": WATER_COL},
+	# Lava
+	"magma_spit":      {"name": "Magma Spit", "effect": "lob_zone", "cost": 20, "cd": 1.2, "range": 6.0, "speed": 16.0, "size": 1.0, "dmg": 5, "gravity": 18.0, "explode_radius": 2.0, "radius": 2.6, "life": 5.0, "dot": 4.0, "element": "lava", "color": LAVA_COL},
+	# Poison / Acid
+	"acid_spray":      {"name": "Acid Spray", "effect": "acid", "cost": 16, "cd": 0.9, "range": 4.5, "angle": 50.0, "dmg": 3, "vuln": 1.5, "dot": 3.0, "duration": 4.0, "element": "acid", "color": ACID_COL},
+	"plague_cloud":    {"name": "Plague Cloud", "effect": "contagion", "cost": 24, "cd": 3.0, "radius": 3.0, "dps": 4.0, "duration": 6.0, "jump_range": 3.5, "ticks": 9, "element": "poison", "color": ACID_COL},
+	"toxic_trap":      {"name": "Toxic Trap", "effect": "trap", "cost": 18, "cd": 2.0, "trigger": 2.2, "radius": 3.5, "dmg": 6, "dot": 4.0, "duration": 4.0, "life": 12.0, "element": "poison", "color": ACID_COL},
+	# Nature
+	"vine_whip":       {"name": "Vine Whip", "effect": "yank", "cost": 12, "cd": 0.7, "range": 8.0, "dmg": 4, "force": 16.0, "element": "nature", "color": NATURE_COL},
+	# Blood (HP-cost)
+	"blood_spike":     {"name": "Blood Spike", "effect": "projectile", "cost": 0, "hp_cost": 12, "cd": 0.6, "count": 1, "size": 1.1, "speed": 30.0, "dmg": 10, "pierce": true, "element": "blood", "color": BLOOD_COL},
+	# Light
+	"consecrate":      {"name": "Consecrate", "effect": "consecrate", "cost": 22, "cd": 3.0, "radius": 4.0, "life": 6.0, "dmg": 3, "heal": 3, "element": "holy", "color": HOLY_COL},
+	"guardian_angel":  {"name": "Guardian Angel", "effect": "buff", "buff": "guard", "cost": 18, "cd": 16.0, "duration": 12.0, "element": "holy", "color": HOLY_COL},
+	"cleansing_blessing": {"name": "Cleansing Blessing", "effect": "buff", "buff": "cleanse", "cost": 14, "cd": 8.0, "amount": 35.0, "duration": 5.0, "element": "holy", "color": HOLY_COL},
+	# Shadow / Void
+	"eclipse":         {"name": "Eclipse", "effect": "weaken_zone", "cost": 22, "cd": 4.0, "radius": 4.5, "life": 6.0, "weak": 0.5, "slow": 0.5, "element": "shadow", "color": SHADOW_COL},
+	"soul_chains":     {"name": "Soul Chains", "effect": "link", "cost": 20, "cd": 5.0, "radius": 6.0, "share": 0.35, "duration": 6.0, "element": "shadow", "color": SHADOW_COL},
+	"oblivion":        {"name": "Oblivion", "effect": "oblivion", "cost": 50, "cd": 7.0, "windup": 0.3, "radius": 7.0, "force": 13.0, "ticks": 6, "tick_dmg": 2, "dmg": 18, "element": "shadow", "color": SHADOW_COL},
+	# Gravity
+	"crush":           {"name": "Crush", "effect": "grasp", "cost": 18, "cd": 1.6, "range": 9.0, "root": 1.6, "dps": 5.0, "duration": 3.0, "burst": 10, "element": "gravity", "color": GRAV_COL},
+	"suspend":         {"name": "Suspend", "effect": "suspend", "cost": 16, "cd": 1.2, "range": 9.0, "dmg": 3, "power": 12.0, "duration": 1.2, "element": "gravity", "color": GRAV_COL},
+	"antigravity_field": {"name": "Anti-Gravity Field", "effect": "buff", "buff": "jump", "cost": 12, "cd": 8.0, "amount": 4.0, "duration": 12.0, "element": "gravity", "color": GRAV_COL},
+	# Time
+	"rewind":          {"name": "Rewind", "effect": "rewind", "cost": 20, "cd": 12.0, "element": "time", "color": TIME_COL},
+	"stasis":          {"name": "Stasis", "effect": "grasp", "cost": 16, "cd": 2.0, "range": 9.0, "root": 3.0, "dps": 0.0, "duration": 3.0, "element": "time", "color": TIME_COL},
+	"echo":            {"name": "Echo", "effect": "echo", "cost": 10, "cd": 3.0, "element": "time", "color": TIME_COL},
+	"quicken":         {"name": "Quicken", "effect": "buff", "buff": "cdr", "cost": 16, "cd": 12.0, "duration": 6.0, "element": "time", "color": TIME_COL},
+	# Sound
+	"deafening_screech": {"name": "Deafening Screech", "effect": "stun", "cost": 20, "cd": 2.0, "radius": 4.5, "dmg": 3, "duration": 1.6, "element": "sound", "color": SOUND_COL},
+	"lullaby":         {"name": "Lullaby", "effect": "sleep", "cost": 18, "cd": 3.0, "range": 6.0, "radius": 4.0, "duration": 4.0, "element": "sound", "color": SOUND_COL},
+	# Sand
+	"dust_devil":      {"name": "Dust Devil", "effect": "moving_hazard", "cost": 22, "cd": 1.6, "range": 12.0, "radius": 2.6, "dmg": 2, "element": "sand", "color": SAND_COL},
+	# Crystal
+	"prism_bolt":      {"name": "Prism Bolt", "effect": "split_bolt", "cost": 18, "cd": 0.8, "size": 0.9, "speed": 28.0, "dmg": 5, "split": 3, "split_dmg": 3, "element": "crystal", "color": CRYSTAL_COL},
+	# Mind / Psychic
+	"confusion":       {"name": "Confusion", "effect": "charm", "cost": 22, "cd": 4.0, "radius": 5.0, "duration": 5.0, "element": "mind", "color": ARCANE_COL},
+	"telekinetic_throw": {"name": "Telekinetic Throw", "effect": "tk_throw", "cost": 20, "cd": 1.4, "range": 9.0, "dmg": 5, "force": 20.0, "collide_radius": 2.5, "collide_dmg": 5, "element": "mind", "color": ARCANE_COL},
+	"charm":           {"name": "Charm", "effect": "charm", "cost": 18, "cd": 5.0, "radius": 0.0, "range": 9.0, "duration": 7.0, "element": "mind", "color": ARCANE_COL},
+	"mana_shield":     {"name": "Mana Shield", "effect": "buff", "buff": "mshield", "cost": 10, "cd": 8.0, "duration": 8.0, "element": "mind", "color": ARCANE_COL},
+	# Necromancy
+	"corpse_explosion": {"name": "Corpse Explosion", "effect": "corpse_blast", "cost": 20, "cd": 1.5, "range": 12.0, "dmg": 12, "radius": 3.5, "splash": 6, "element": "necro", "color": NECRO_COL},
+	"wraith_form":     {"name": "Wraith Form", "effect": "buff", "buff": "phase", "cost": 18, "cd": 10.0, "duration": 4.0, "element": "necro", "color": NECRO_COL},
+	"soul_harvest":    {"name": "Soul Harvest", "effect": "buff", "buff": "harvest", "cost": 16, "cd": 12.0, "duration": 12.0, "element": "necro", "color": NECRO_COL},
+	# Chaos
+	"wild_surge":      {"name": "Wild Surge", "effect": "wild", "cost": 16, "cd": 1.5, "element": "chaos", "color": CHAOS_COL},
+	"polymorph":       {"name": "Polymorph", "effect": "polymorph", "cost": 18, "cd": 4.0, "range": 9.0, "duration": 5.0, "element": "chaos", "color": CHAOS_COL},
 }
 
 # Until leveling exists, start with a varied 5-spell loadout (bound to Q/R/F/C/V).
@@ -223,6 +290,20 @@ var _aura_tick := 0.0
 var _pound_params := {}            # params for the pending pound AoE
 var _meteor_target := Vector3.ZERO # landing point fixed at cast (telegraph + impact)
 
+# --- Expanded spellbook: new defensive / utility state ---
+var _absorb := 0.0                 # Bubble Shield: flat damage pool
+var _absorb_time := 0.0
+var _guard_time := 0.0             # Guardian Angel: survive the next lethal hit
+var _jump_buff_amt := 0.0          # Anti-Gravity Field: extra jump velocity
+var _jump_buff_time := 0.0
+var _cdr_time := 0.0               # Quicken: cooldowns tick faster
+var _mshield_time := 0.0           # Mana Shield: damage drains stamina, not HP
+var _phase_time := 0.0             # Wraith Form: intangible / invulnerable
+var _harvest_time := 0.0           # Soul Harvest: kills heal + empower
+var _last_spell: Dictionary = {}   # Echo: the previously cast spell
+var _hist: Array = []              # Rewind: recent {p,h,s} snapshots (oldest first)
+const REWIND_SAMPLES := 180        # ~3 s of history at 60 fps
+
 # Dash trail (Flame Dash): damages enemies along the path and leaves flames.
 var _trail_time := 0.0
 var _trail_color := Color(1, 0.5, 0.1)
@@ -236,6 +317,9 @@ var _trail_hit: Array = []
 # separately (see equipped_spells), not tied to the staff item.
 # Testing flag: start with the full armor catalog in the inventory (see _ready).
 const GRANT_TEST_ARMOR := true
+# Testing: unlock every spell so the whole catalog is reachable by cycling the
+# spellbook (G). Set false to restore normal level-gated unlocks.
+const GRANT_ALL_SPELLS := true
 const STARTING_STAFF := {
 	"name": "Apprentice Staff",
 	"rarity": "Common",
@@ -319,7 +403,15 @@ func _ready() -> void:
 
 	# Start at level 1 knowing only the first spell, with a single ability slot.
 	# More slots/spells unlock as you gain XP from kills (see gain_xp / _level_up).
-	unlocked_spells = [LEVEL_SPELL_ORDER[0]]
+	# Testing: GRANT_ALL_SPELLS makes EVERY spell reachable via the G spellbook cycle.
+	if GRANT_ALL_SPELLS:
+		unlocked_spells = SPELLS.keys()
+		# Start the G spellbook cycle at the first NEW spell so they're easy to reach.
+		var first_new := unlocked_spells.find("tidal_wave")
+		if first_new > 0:
+			_book_index = first_new - 1
+	else:
+		unlocked_spells = [LEVEL_SPELL_ORDER[0]]
 	spell_slots = 1
 	_rebuild_loadout()
 	max_health = get_max_health()
@@ -357,6 +449,10 @@ func _physics_process(delta: float) -> void:
 		if Input.is_action_just_pressed("ability_6"):
 			_cycle_spellbook_slot()
 		_update_trail(delta)
+		# Rewind history: keep a rolling ~3 s of position + vitals to snap back to.
+		_hist.append({"p": global_position, "h": health, "s": stamina})
+		if _hist.size() > REWIND_SAMPLES:
+			_hist.pop_front()
 
 	if active and _flying:
 		# Levitate: free 3D flight, gravity off, costs stamina (see _update_flight).
@@ -597,6 +693,8 @@ func get_jump_velocity() -> float:
 		var it = equipment[slot]
 		if it != null:
 			j += float(it.get("jump_mod", 0.0))
+	if _jump_buff_time > 0.0:
+		j += _jump_buff_amt  # Anti-Gravity Field
 	return maxf(4.0, j)
 
 
@@ -609,9 +707,10 @@ func get_jump_height() -> float:
 # --- Abilities ---
 
 func _update_cooldowns(delta: float) -> void:
+	var rate := 2.0 if _cdr_time > 0.0 else 1.0   # Quicken doubles recovery
 	for i in range(_spell_cd.size()):
 		if _spell_cd[i] > 0.0:
-			_spell_cd[i] -= delta
+			_spell_cd[i] -= delta * rate
 
 
 ## Count down the timed self-buffs.
@@ -642,6 +741,25 @@ func _update_buffs(delta: float) -> void:
 			for i in range(5):
 				var a := TAU * float(i) / 5.0
 				_spawn_emitter(global_position + Vector3(cos(a) * _aura_radius * 0.8, 0.3, sin(a) * _aura_radius * 0.8), _aura_color, 0.12, 0.4, Vector3.UP * 0.5)
+	# Expanded-spellbook buff timers.
+	if _absorb_time > 0.0:
+		_absorb_time -= delta
+		if _absorb_time <= 0.0:
+			_absorb = 0.0
+	if _guard_time > 0.0:
+		_guard_time -= delta
+	if _jump_buff_time > 0.0:
+		_jump_buff_time -= delta
+	if _cdr_time > 0.0:
+		_cdr_time -= delta
+	if _mshield_time > 0.0:
+		_mshield_time -= delta
+	if _phase_time > 0.0:
+		_phase_time -= delta
+		if Engine.get_physics_frames() % 6 == 0:
+			_spawn_emitter(global_position + Vector3.UP * 1.0, NECRO_COL, 0.12, 0.4, Vector3.UP * 0.4)
+	if _harvest_time > 0.0:
+		_harvest_time -= delta
 
 
 ## Called by enemies' attacks: true while Counter Ward is active (they get reflected).
@@ -701,9 +819,17 @@ func _handle_abilities() -> void:
 		var cost := int(spell.get("cost", 0))
 		if stamina < float(cost):
 			continue  # not enough stamina
+		var hp_cost := int(spell.get("hp_cost", 0))
+		if hp_cost > 0 and health <= hp_cost:
+			continue  # blood magic would kill us — refuse the cast
 		stamina -= cost
+		if hp_cost > 0:
+			health = maxi(1, health - hp_cost)
 		_regen_delay = REGEN_DELAY
 		_spell_cd[i] = float(spell.get("cd", 1.0))
+		# Remember the last real spell so Echo can repeat it.
+		if str(spell.get("effect", "")) != "echo":
+			_last_spell = spell
 		_cast_spell(spell)
 		break  # one cast per frame
 
@@ -823,6 +949,31 @@ func _run_effect(mv: Dictionary) -> void:
 		"heal_zone": _eff_heal_zone(mv)
 		"channel": _eff_channel(mv)
 		"aura": _eff_aura(mv)
+		# --- Expanded spellbook ---
+		"wave": _eff_wave(mv)
+		"geyser": _eff_geyser(mv)
+		"grasp": _eff_grasp(mv)
+		"lob_zone": _eff_lob_zone(mv)
+		"acid": _eff_acid(mv)
+		"contagion": _eff_contagion(mv)
+		"trap": _eff_trap(mv)
+		"yank": _eff_yank(mv)
+		"consecrate": _eff_consecrate(mv)
+		"weaken_zone": _eff_weaken_zone(mv)
+		"link": _eff_link(mv)
+		"oblivion": _eff_oblivion(mv)
+		"suspend": _eff_suspend(mv)
+		"stun": _eff_stun(mv)
+		"sleep": _eff_sleep(mv)
+		"moving_hazard": _eff_dust_devil(mv)
+		"split_bolt": _eff_split_bolt(mv)
+		"charm": _eff_charm(mv)
+		"tk_throw": _eff_tk_throw(mv)
+		"corpse_blast": _eff_corpse_blast(mv)
+		"polymorph": _eff_polymorph(mv)
+		"wild": _eff_wild(mv)
+		"rewind": _eff_rewind(mv)
+		"echo": _eff_echo(mv)
 
 
 func _telegraph(mv: Dictionary, t: float) -> void:
@@ -1540,6 +1691,29 @@ func _eff_buff(mv: Dictionary) -> void:
 		"restore":
 			stamina = clampf(stamina + amt, 0.0, max_stamina)
 			health = clampi(health + int(amt * 0.5), 0, max_health)
+		"absorb":
+			_absorb = amt
+			_absorb_time = dur
+		"guard":
+			_guard_time = dur
+		"jump":
+			_jump_buff_amt = amt
+			_jump_buff_time = dur
+		"cdr":
+			_cdr_time = dur
+			for i in range(_spell_cd.size()):
+				_spell_cd[i] = 0.0  # Quicken also clears current cooldowns
+		"mshield":
+			_mshield_time = dur
+		"phase":
+			_phase_time = dur
+			_stealth_time = maxf(_stealth_time, dur)  # enemies lose sight of us too
+		"harvest":
+			_harvest_time = dur
+		"cleanse":
+			health = clampi(health + int(amt), 0, max_health)
+			_regen_buff_amt = maxf(_regen_buff_amt, 20.0)
+			_regen_buff_time = maxf(_regen_buff_time, 5.0)
 	for i in range(10):
 		var a := TAU * float(i) / 10.0
 		_spawn_emitter(global_position + Vector3(cos(a) * 0.5, 0.2, sin(a) * 0.5), col, 0.16, 0.6, Vector3.UP * 1.6)
@@ -2019,6 +2193,548 @@ func _eff_aura(mv: Dictionary) -> void:
 	_spawn_ring(global_position + Vector3.UP * 0.4, _aura_radius, _aura_color, 16)
 
 
+# ============================================================================
+#  Expanded spellbook effects (37 new uniques)
+# ============================================================================
+
+## Target helper: the enemy roughly in front of us, else the nearest within range.
+func _pick_target(rng: float):
+	var fronts := _enemies_in_front(_aim_direction_3d())
+	if not fronts.is_empty():
+		return fronts[0]
+	return _nearest_enemy_within(global_position, rng, [])
+
+
+## A flat glowing ground disc (zones that don't use the hazard ticker).
+func _make_ground_disc(center: Vector3, radius: float, col: Color) -> MeshInstance3D:
+	var disc := MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = radius
+	cyl.bottom_radius = radius
+	cyl.height = 0.06
+	disc.mesh = cyl
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = col.darkened(0.2)
+	mat.emission_enabled = true
+	mat.emission = col
+	mat.emission_energy_multiplier = 1.3
+	disc.material_override = mat
+	get_tree().current_scene.add_child(disc)
+	disc.global_position = center + Vector3.UP * 0.06
+	return disc
+
+
+# Water: a wall of water sweeps forward, damaging + shoving enemies once each.
+func _eff_wave(mv: Dictionary) -> void:
+	var dir := _aim_direction()
+	var rng := float(mv.get("range", 14.0))
+	var width := float(mv.get("width", 4.0))
+	var dmg := _amp(int(mv.get("dmg", 5)))
+	var force := float(mv.get("force", 13.0))
+	var col: Color = mv.get("color", WATER_COL)
+	var hit: Array = []
+	var steps := maxi(1, int(rng / 1.2))
+	var start := global_position
+	for s in range(steps):
+		var front := start + dir * (1.2 * float(s + 1))
+		front.y = _ground_y(front) + 0.5
+		get_tree().create_timer(float(s) * 0.04).timeout.connect(_wave_step.bind(front, dir, width, dmg, force, col, hit))
+
+
+func _wave_step(front: Vector3, dir: Vector3, width: float, dmg: int, force: float, col: Color, hit: Array) -> void:
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if e in hit:
+			continue
+		if front.distance_to(e.global_position) <= width:
+			hit.append(e)
+			if e.has_method("take_damage"):
+				e.take_damage(dmg)
+			if e.has_method("apply_knockback"):
+				e.apply_knockback(dir * force + Vector3.UP * 2.0)
+	var right := Vector3(dir.z, 0.0, -dir.x)
+	for i in range(5):
+		var f := lerpf(-1.0, 1.0, float(i) / 4.0)
+		_spawn_emitter(front + right * f * width, col, 0.22, 0.4, Vector3.UP * 0.6)
+
+
+# Water: a column erupts at the aimed point, launching enemies up.
+func _eff_geyser(mv: Dictionary) -> void:
+	var center := global_position + _aim_direction() * float(mv.get("range", 6.0))
+	center.y = _ground_y(center)
+	var radius := float(mv.get("radius", 3.0))
+	var dmg := _amp(int(mv.get("dmg", 6)))
+	var power := float(mv.get("power", 11.0))
+	var col: Color = mv.get("color", WATER_COL)
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) <= radius:
+			if e.has_method("take_damage"):
+				e.take_damage(dmg)
+			if e.has_method("apply_knockback"):
+				e.apply_knockback(Vector3.UP * power)
+	_spawn_ring(center + Vector3.UP * 0.2, radius, col, 14)
+	for i in range(12):
+		var off := Vector3(randf_range(-radius * 0.6, radius * 0.6), randf_range(0.0, 0.5), randf_range(-radius * 0.6, radius * 0.6))
+		_spawn_emitter(center + off, col, 0.2, 0.55, Vector3.UP * 5.0)
+
+
+# Single-target lockdown: root + (optional) DoT, with an optional burst on expiry.
+# Powers Drowning Grasp, Crush (burst), and Stasis (pure root, no DoT).
+func _eff_grasp(mv: Dictionary) -> void:
+	var e = _pick_target(float(mv.get("range", 9.0)))
+	if e == null:
+		return
+	var col: Color = mv.get("color", WATER_COL)
+	if e.has_method("apply_root"):
+		e.apply_root(float(mv.get("root", 2.0)))
+	var dps := float(mv.get("dps", 0.0))
+	if dps > 0.0 and e.has_method("apply_dot"):
+		e.apply_dot(dps, float(mv.get("duration", 3.0)))
+	var burst := int(mv.get("burst", 0))
+	if burst > 0:
+		get_tree().create_timer(float(mv.get("duration", 3.0))).timeout.connect(_grasp_burst.bind(e, _amp(burst), col))
+	_spawn_ring(e.global_position + Vector3.UP * 0.3, 1.0, col, 10)
+
+
+func _grasp_burst(e, dmg: int, col: Color) -> void:
+	if is_instance_valid(e) and e.has_method("take_damage"):
+		e.take_damage(dmg)
+		_spawn_burst(e.global_position + Vector3.UP * 0.8, 0.7, col, 8)
+
+
+# Lava: a lobbed glob that bursts, plus a burning pool at the aimed ground point.
+func _eff_lob_zone(mv: Dictionary) -> void:
+	var dir := _aim_direction_3d()
+	var col: Color = mv.get("color", LAVA_COL)
+	var packed: PackedScene = load(FIREBALL_SCENE)
+	if packed != null:
+		var d := (dir + Vector3.UP * 0.4).normalized()
+		var fb = packed.instantiate()
+		get_tree().current_scene.add_child(fb)
+		fb.global_position = global_position + d * 1.0 + Vector3.UP * 1.2
+		fb.setup(d, _amp(int(mv.get("dmg", 5))), float(mv.get("speed", 16.0)), float(mv.get("size", 1.0)), col, false)
+		if fb.has_method("set_motion"):
+			fb.set_motion(float(mv.get("gravity", 18.0)), 0.0, true)
+		if fb.has_method("set_explode"):
+			fb.set_explode(float(mv.get("explode_radius", 2.0)), col)
+	var center := global_position + _aim_direction() * float(mv.get("range", 6.0))
+	center.y = _ground_y(center)
+	var opts := {"dmg": 0, "slow": 0.0, "slow_dur": 1.0, "dot": float(mv.get("dot", 4.0)), "grow": 0.0, "color": col}
+	get_tree().create_timer(0.45).timeout.connect(_spawn_hazard.bind(center, float(mv.get("radius", 2.6)), col, float(mv.get("life", 5.0)), 0.06, opts))
+
+
+# Acid: a cone that damages, shreds armor (vulnerable), and applies a DoT.
+func _eff_acid(mv: Dictionary) -> void:
+	var rng := float(mv.get("range", 4.5))
+	var half := deg_to_rad(float(mv.get("angle", 50.0)) * 0.5)
+	var dmg := _amp(int(mv.get("dmg", 3)))
+	var vuln := float(mv.get("vuln", 1.5))
+	var dot := float(mv.get("dot", 3.0))
+	var dur := float(mv.get("duration", 4.0))
+	var col: Color = mv.get("color", ACID_COL)
+	var dir := _aim_direction()
+	for e in get_tree().get_nodes_in_group("enemies"):
+		var to_e: Vector3 = e.global_position - global_position
+		if to_e.length() > rng:
+			continue
+		var flat := Vector3(to_e.x, 0, to_e.z)
+		if flat.length() < 0.01 or dir.dot(flat.normalized()) < cos(half):
+			continue
+		if e.has_method("take_damage"):
+			e.take_damage(dmg)
+		if e.has_method("apply_vulnerable"):
+			e.apply_vulnerable(vuln, dur)
+		if e.has_method("apply_dot"):
+			e.apply_dot(dot, dur)
+	var right := Vector3(dir.z, 0.0, -dir.x)
+	for i in range(9):
+		var f := lerpf(-1.0, 1.0, float(i) / 8.0)
+		var fan := (dir + right * f * 0.9).normalized()
+		_spawn_emitter(global_position + Vector3.UP * 0.9 + dir * 0.8, col, 0.16, 0.35, fan * rng)
+
+
+# Poison: a DoT cloud that spreads from infected enemy to nearby enemies over time.
+func _eff_contagion(mv: Dictionary) -> void:
+	var center := global_position + _aim_direction() * 5.0
+	center.y = _ground_y(center)
+	var radius := float(mv.get("radius", 3.0))
+	var dps := float(mv.get("dps", 4.0))
+	var jump := float(mv.get("jump_range", 3.5))
+	var ticks := int(mv.get("ticks", 9))
+	var col: Color = mv.get("color", ACID_COL)
+	var infected: Array = []
+	for t in range(ticks):
+		get_tree().create_timer(float(t) * 0.6).timeout.connect(_contagion_tick.bind(center, radius, jump, dps, col, infected))
+
+
+func _contagion_tick(center: Vector3, radius: float, jump: float, dps: float, col: Color, infected: Array) -> void:
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if e not in infected and center.distance_to(e.global_position) <= radius:
+			infected.append(e)
+	var newly: Array = []
+	for src in infected:
+		if not is_instance_valid(src):
+			continue
+		for e in get_tree().get_nodes_in_group("enemies"):
+			if e in infected or e in newly:
+				continue
+			if src.global_position.distance_to(e.global_position) <= jump:
+				newly.append(e)
+	infected.append_array(newly)
+	for e in infected:
+		if is_instance_valid(e):
+			if e.has_method("apply_dot"):
+				e.apply_dot(dps, 1.2)
+			_spawn_emitter(e.global_position + Vector3.UP * 1.0, col, 0.14, 0.5, Vector3.UP * 0.6)
+
+
+# Poison: an armed trap that bursts into a damaging DoT cloud when an enemy nears.
+func _eff_trap(mv: Dictionary) -> void:
+	var pos := global_position + _aim_direction() * 2.5
+	pos.y = _ground_y(pos) + 0.1
+	var col: Color = mv.get("color", ACID_COL)
+	var disc := _make_orb(pos, 0.22, col)
+	var life := float(mv.get("life", 12.0))
+	var state := {"done": false}
+	var polls := maxi(1, int(life / 0.2))
+	for t in range(polls):
+		get_tree().create_timer(float(t) * 0.2).timeout.connect(_trap_poll.bind(state, disc, pos, float(mv.get("trigger", 2.2)), float(mv.get("radius", 3.5)), _amp(int(mv.get("dmg", 6))), float(mv.get("dot", 4.0)), float(mv.get("duration", 4.0)), col))
+	get_tree().create_timer(life).timeout.connect(_trap_expire.bind(state, disc))
+
+
+func _trap_poll(state: Dictionary, disc, pos: Vector3, trig: float, radius: float, dmg: int, dot: float, dur: float, col: Color) -> void:
+	if state.get("done", false):
+		return
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if pos.distance_to(e.global_position) <= trig:
+			state["done"] = true
+			for e2 in get_tree().get_nodes_in_group("enemies"):
+				if pos.distance_to(e2.global_position) <= radius:
+					if e2.has_method("take_damage"):
+						e2.take_damage(dmg)
+					if e2.has_method("apply_dot"):
+						e2.apply_dot(dot, dur)
+			_spawn_ring(pos + Vector3.UP * 0.2, radius, col, 16)
+			_spawn_burst(pos + Vector3.UP * 0.3, 0.6, col, 8)
+			if is_instance_valid(disc):
+				disc.queue_free()
+			return
+
+
+func _trap_expire(state: Dictionary, disc) -> void:
+	if not state.get("done", false) and is_instance_valid(disc):
+		disc.queue_free()
+
+
+# Nature: a vine that damages the nearest enemy and yanks it toward you.
+func _eff_yank(mv: Dictionary) -> void:
+	var e = _pick_target(float(mv.get("range", 8.0)))
+	if e == null:
+		return
+	var col: Color = mv.get("color", NATURE_COL)
+	if e.has_method("take_damage"):
+		e.take_damage(_amp(int(mv.get("dmg", 4))))
+	var toward := global_position - e.global_position
+	toward.y = 0.0
+	if e.has_method("apply_knockback") and toward.length() > 0.01:
+		e.apply_knockback(toward.normalized() * float(mv.get("force", 16.0)))
+	_spawn_beam(global_position + Vector3.UP * 1.0, e.global_position + Vector3.UP * 0.8, col)
+
+
+# Light: holy ground that damages enemies inside while healing you if you stand in it.
+func _eff_consecrate(mv: Dictionary) -> void:
+	var center := global_position
+	center.y = _ground_y(center)
+	var radius := float(mv.get("radius", 4.0))
+	var life := float(mv.get("life", 6.0))
+	var col: Color = mv.get("color", HOLY_COL)
+	var disc := _make_ground_disc(center, radius, col)
+	var ticks := maxi(1, int(life / 0.6))
+	for t in range(ticks):
+		get_tree().create_timer(float(t) * 0.6).timeout.connect(_consecrate_tick.bind(center, radius, int(mv.get("dmg", 3)), int(mv.get("heal", 3)), col))
+	get_tree().create_timer(life).timeout.connect(_free_node.bind(disc))
+
+
+func _consecrate_tick(center: Vector3, radius: float, dmg: int, heal_amt: int, col: Color) -> void:
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) <= radius and e.has_method("take_damage"):
+			e.take_damage(_amp(dmg))
+	if center.distance_to(global_position) <= radius:
+		heal(heal_amt)
+	for i in range(4):
+		var a := TAU * float(i) / 4.0
+		_spawn_emitter(center + Vector3(cos(a) * radius * 0.7, 0.2, sin(a) * radius * 0.7), col, 0.14, 0.5, Vector3.UP * 0.8)
+
+
+# Shadow: a darkness zone that weakens (and slows) enemies inside.
+func _eff_weaken_zone(mv: Dictionary) -> void:
+	var center := global_position + _aim_direction() * 5.0
+	center.y = _ground_y(center)
+	var radius := float(mv.get("radius", 4.5))
+	var life := float(mv.get("life", 6.0))
+	var col: Color = mv.get("color", SHADOW_COL)
+	var disc := _make_ground_disc(center, radius, col)
+	var ticks := maxi(1, int(life / 0.6))
+	for t in range(ticks):
+		get_tree().create_timer(float(t) * 0.6).timeout.connect(_weaken_tick.bind(center, radius, float(mv.get("weak", 0.5)), float(mv.get("slow", 0.5)), col))
+	get_tree().create_timer(life).timeout.connect(_free_node.bind(disc))
+
+
+func _weaken_tick(center: Vector3, radius: float, weak: float, slow: float, col: Color) -> void:
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) <= radius:
+			if e.has_method("apply_weaken"):
+				e.apply_weaken(weak, 1.2)
+			if slow > 0.0 and e.has_method("apply_slow"):
+				e.apply_slow(slow, 1.2)
+	for i in range(3):
+		var off := Vector3(randf_range(-radius, radius), randf_range(0.2, 1.0), randf_range(-radius, radius))
+		_spawn_emitter(center + off, col, 0.16, 0.5, Vector3.UP * 0.3)
+
+
+# Shadow: link enemies so a share of damage to one bleeds to all of them.
+func _eff_link(mv: Dictionary) -> void:
+	var center := global_position + _aim_direction() * 5.0
+	var radius := float(mv.get("radius", 6.0))
+	var col: Color = mv.get("color", SHADOW_COL)
+	var targets: Array = []
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) <= radius:
+			targets.append(e)
+	if targets.size() < 2:
+		return
+	for e in targets:
+		if e.has_method("set_links"):
+			e.set_links(targets, float(mv.get("share", 0.35)), float(mv.get("duration", 6.0)))
+	for i in range(targets.size()):
+		var a = targets[i]
+		var b = targets[(i + 1) % targets.size()]
+		_spawn_beam(a.global_position + Vector3.UP * 0.8, b.global_position + Vector3.UP * 0.8, col)
+
+
+# Shadow (ult): pull everything inward for a moment, then detonate.
+func _eff_oblivion(mv: Dictionary) -> void:
+	var center := global_position + _aim_direction() * 6.0
+	center.y = _ground_y(center) + 1.0
+	var radius := float(mv.get("radius", 7.0))
+	var ticks := int(mv.get("ticks", 6))
+	var col: Color = mv.get("color", SHADOW_COL)
+	var core := _make_orb(center, 0.8, col)
+	for t in range(ticks):
+		get_tree().create_timer(float(t) * 0.15).timeout.connect(_pull_tick.bind(center, radius, float(mv.get("force", 13.0)), _amp(int(mv.get("tick_dmg", 2)))))
+	get_tree().create_timer(float(ticks) * 0.15 + 0.1).timeout.connect(_oblivion_detonate.bind(center, radius, _amp(int(mv.get("dmg", 18))), col, core))
+
+
+func _oblivion_detonate(center: Vector3, radius: float, dmg: int, col: Color, core) -> void:
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) <= radius and e.has_method("take_damage"):
+			e.take_damage(dmg)
+	_spawn_ring(center, radius, col, 24)
+	_spawn_burst(center, 1.0, col, 16)
+	if is_instance_valid(core):
+		core.queue_free()
+
+
+# Gravity: lift one enemy off its feet and briefly hold it helpless.
+func _eff_suspend(mv: Dictionary) -> void:
+	var e = _pick_target(float(mv.get("range", 9.0)))
+	if e == null:
+		return
+	var col: Color = mv.get("color", GRAV_COL)
+	if e.has_method("take_damage"):
+		e.take_damage(_amp(int(mv.get("dmg", 3))))
+	if e.has_method("apply_knockback"):
+		e.apply_knockback(Vector3.UP * float(mv.get("power", 12.0)))
+	if e.has_method("apply_root"):
+		e.apply_root(float(mv.get("duration", 1.2)))
+	_spawn_burst(e.global_position + Vector3.UP * 1.0, 0.6, col, 8)
+
+
+# Sound: an area stun (root) plus a little damage.
+func _eff_stun(mv: Dictionary) -> void:
+	var radius := float(mv.get("radius", 4.5))
+	var dmg := _amp(int(mv.get("dmg", 3)))
+	var dur := float(mv.get("duration", 1.6))
+	var col: Color = mv.get("color", SOUND_COL)
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if global_position.distance_to(e.global_position) <= radius:
+			if e.has_method("take_damage"):
+				e.take_damage(dmg)
+			if e.has_method("apply_root"):
+				e.apply_root(dur)
+	_spawn_ring(global_position + Vector3.UP * 0.6, radius, col, 20)
+
+
+# Sound: lull enemies in an area to sleep until something hits them.
+func _eff_sleep(mv: Dictionary) -> void:
+	var center := global_position + _aim_direction() * float(mv.get("range", 6.0))
+	center.y = _ground_y(center)
+	var radius := float(mv.get("radius", 4.0))
+	var dur := float(mv.get("duration", 4.0))
+	var col: Color = mv.get("color", SOUND_COL)
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) <= radius and e.has_method("apply_sleep"):
+			e.apply_sleep(dur)
+	_spawn_ring(center + Vector3.UP * 0.3, radius, col, 14)
+
+
+# Sand: a tornado that travels forward on its own, hitting along the way.
+func _eff_dust_devil(mv: Dictionary) -> void:
+	var dir := _aim_direction()
+	var rng := float(mv.get("range", 12.0))
+	var radius := float(mv.get("radius", 2.6))
+	var dmg := _amp(int(mv.get("dmg", 2)))
+	var col: Color = mv.get("color", SAND_COL)
+	var steps := maxi(1, int(rng))
+	var start := global_position
+	for s in range(steps):
+		var pos := start + dir * float(s + 1)
+		pos.y = _ground_y(pos)
+		get_tree().create_timer(float(s) * 0.1).timeout.connect(_devil_step.bind(pos, dir, radius, dmg, col))
+
+
+func _devil_step(pos: Vector3, dir: Vector3, radius: float, dmg: int, col: Color) -> void:
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if pos.distance_to(e.global_position) <= radius:
+			if e.has_method("take_damage"):
+				e.take_damage(dmg)
+			if e.has_method("apply_knockback"):
+				var tang := Vector3(-dir.z, 0.0, dir.x)
+				e.apply_knockback(tang * 6.0 + Vector3.UP * 3.0)
+	for i in range(5):
+		var a := TAU * float(i) / 5.0 + float(Engine.get_physics_frames()) * 0.2
+		_spawn_emitter(pos + Vector3(cos(a) * radius * 0.7, randf_range(0.2, 1.6), sin(a) * radius * 0.7), col, 0.16, 0.3, Vector3.UP * 0.8)
+
+
+# Crystal: a bolt that shatters into lesser shards on impact (see fireball.set_split).
+func _eff_split_bolt(mv: Dictionary) -> void:
+	var dir := _aim_direction_3d()
+	var packed: PackedScene = load(FIREBALL_SCENE)
+	if packed == null:
+		return
+	var col: Color = mv.get("color", CRYSTAL_COL)
+	var fb = packed.instantiate()
+	get_tree().current_scene.add_child(fb)
+	fb.global_position = global_position + dir * 1.0 + Vector3.UP * 1.2
+	fb.setup(dir, _amp(int(mv.get("dmg", 5))), float(mv.get("speed", 28.0)), float(mv.get("size", 0.9)), col, false)
+	if fb.has_method("set_split"):
+		fb.set_split(int(mv.get("split", 3)), _amp(int(mv.get("split_dmg", 3))))
+	if fb.has_method("set_motion"):
+		fb.set_motion(0.0, 0.0, true)
+	_spawn_burst(global_position + dir * 1.0 + Vector3.UP * 1.2, 0.4, col, 4)
+
+
+# Mind: charm one enemy (radius 0) or a whole area (Confusion) to fight other enemies.
+func _eff_charm(mv: Dictionary) -> void:
+	var dur := float(mv.get("duration", 6.0))
+	var radius := float(mv.get("radius", 0.0))
+	var col: Color = mv.get("color", ARCANE_COL)
+	if radius <= 0.0:
+		var e = _pick_target(float(mv.get("range", 9.0)))
+		if e != null and e.has_method("apply_charm"):
+			e.apply_charm(dur)
+			_spawn_burst(e.global_position + Vector3.UP * 1.0, 0.6, col, 8)
+		return
+	var center := global_position + _aim_direction() * 5.0
+	center.y = _ground_y(center)
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) <= radius and e.has_method("apply_charm"):
+			e.apply_charm(dur)
+			_spawn_emitter(e.global_position + Vector3.UP * 1.2, col, 0.16, 0.5, Vector3.UP * 0.6)
+	_spawn_ring(center + Vector3.UP * 0.3, radius, col, 14)
+
+
+# Mind: grab the nearest enemy and hurl it forward into others.
+func _eff_tk_throw(mv: Dictionary) -> void:
+	var e = _pick_target(float(mv.get("range", 9.0)))
+	if e == null:
+		return
+	var dir := _aim_direction()
+	var col: Color = mv.get("color", ARCANE_COL)
+	var force := float(mv.get("force", 20.0))
+	if e.has_method("take_damage"):
+		e.take_damage(_amp(int(mv.get("dmg", 5))))
+	if e.has_method("apply_knockback"):
+		e.apply_knockback(dir * force + Vector3.UP * 3.0)
+	var crad := float(mv.get("collide_radius", 2.5))
+	var cdmg := _amp(int(mv.get("collide_dmg", 5)))
+	for e2 in get_tree().get_nodes_in_group("enemies"):
+		if e2 == e:
+			continue
+		if e.global_position.distance_to(e2.global_position) <= crad:
+			if e2.has_method("take_damage"):
+				e2.take_damage(cdmg)
+			if e2.has_method("apply_knockback"):
+				e2.apply_knockback(dir * force * 0.5)
+	_spawn_burst(e.global_position + Vector3.UP * 1.0, 0.6, col, 8)
+
+
+# Necromancy: blast the nearest enemy and splash damage onto those around it.
+func _eff_corpse_blast(mv: Dictionary) -> void:
+	var e = _nearest_enemy_within(global_position, float(mv.get("range", 12.0)), [])
+	if e == null:
+		return
+	var col: Color = mv.get("color", NECRO_COL)
+	var center: Vector3 = e.global_position
+	if e.has_method("take_damage"):
+		e.take_damage(_amp(int(mv.get("dmg", 12))))
+	var radius := float(mv.get("radius", 3.5))
+	var splash := _amp(int(mv.get("splash", 6)))
+	for e2 in get_tree().get_nodes_in_group("enemies"):
+		if e2 == e:
+			continue
+		if center.distance_to(e2.global_position) <= radius and e2.has_method("take_damage"):
+			e2.take_damage(splash)
+	_spawn_ring(center + Vector3.UP * 0.3, radius, col, 18)
+	_spawn_burst(center + Vector3.UP * 0.5, 0.8, col, 12)
+
+
+# Chaos: turn one enemy into a harmless critter for a while.
+func _eff_polymorph(mv: Dictionary) -> void:
+	var e = _pick_target(float(mv.get("range", 9.0)))
+	if e == null:
+		return
+	if e.has_method("apply_polymorph"):
+		e.apply_polymorph(float(mv.get("duration", 5.0)))
+		_spawn_burst(e.global_position + Vector3.UP * 1.0, 0.6, mv.get("color", CHAOS_COL), 10)
+
+
+# Chaos: cast a random OTHER spell's effect.
+func _eff_wild(mv: Dictionary) -> void:
+	var keys := SPELLS.keys()
+	for _i in range(8):
+		var pick: Dictionary = SPELLS[keys[randi() % keys.size()]]
+		var eff := str(pick.get("effect", ""))
+		if eff != "wild" and eff != "echo":
+			_spawn_burst(global_position + Vector3.UP * 1.0, 0.6, mv.get("color", CHAOS_COL), 8)
+			_run_effect(pick)
+			return
+
+
+# Time: snap back to your position & vitals from a few seconds ago.
+func _eff_rewind(mv: Dictionary) -> void:
+	if _hist.is_empty():
+		return
+	var snap: Dictionary = _hist[0]
+	var col: Color = mv.get("color", TIME_COL)
+	_spawn_burst(global_position + Vector3.UP * 1.0, 0.7, col, 10)
+	global_position = snap.get("p", global_position)
+	velocity = Vector3.ZERO
+	health = clampi(int(snap.get("h", health)), 1, max_health)
+	stamina = clampf(float(snap.get("s", stamina)), 0.0, max_stamina)
+	_hist.clear()
+	_spawn_burst(global_position + Vector3.UP * 1.0, 0.7, col, 10)
+
+
+# Time: immediately recast your previous spell.
+func _eff_echo(mv: Dictionary) -> void:
+	if _last_spell.is_empty():
+		return
+	if str(_last_spell.get("effect", "")) == "echo":
+		return
+	_spawn_burst(global_position + Vector3.UP * 1.2, 0.5, mv.get("color", TIME_COL), 6)
+	_run_effect(_last_spell)
+
+
 # --- Ability VFX (brief code-only emissive primitives) ---
 
 ## A glowing particle that drifts, shrinks and dims, then frees itself. Uses a
@@ -2062,12 +2778,43 @@ func _spawn_ring(center: Vector3, radius: float, color: Color, count: int) -> vo
 ## Take damage from goblins/orcs (or anything), show a floating number, and respawn
 ## at the village if we hit 0 HP.
 func take_damage(amount: int) -> void:
+	if _phase_time > 0.0:
+		return  # Wraith Form: intangible, ignores damage entirely
 	if _shield_time > 0.0:
 		amount = maxi(0, int(round(float(amount) * (1.0 - _shield_amt))))  # Stone Skin
+	# Bubble Shield soaks damage from its pool first.
+	if _absorb_time > 0.0 and _absorb > 0.0 and amount > 0:
+		var soak := minf(_absorb, float(amount))
+		_absorb -= soak
+		amount = int(maxf(0.0, float(amount) - soak))
+		if _absorb <= 0.0:
+			_absorb_time = 0.0
+	# Mana Shield routes the rest into stamina until it runs out.
+	if _mshield_time > 0.0 and amount > 0:
+		var s := minf(stamina, float(amount))
+		stamina -= s
+		amount = int(maxf(0.0, float(amount) - s))
+	if amount <= 0:
+		return
 	health = max(0, health - amount)
 	DamageNumber.spawn(get_tree().current_scene, global_position + Vector3.UP * 1.1, amount)
 	if health <= 0:
+		if _guard_time > 0.0:
+			# Guardian Angel: survive at 1 HP, consume the ward.
+			_guard_time = 0.0
+			health = 1
+			_spawn_burst(global_position + Vector3.UP * 1.0, 0.9, HOLY_COL, 14)
+			return
 		_respawn()
+
+
+## Called by enemies on death (enemy._die). Feeds Soul Harvest if it's active.
+func on_enemy_killed(_pos: Vector3) -> void:
+	if _harvest_time > 0.0:
+		heal(12)
+		# Stack a short empower that refreshes with each kill during the harvest.
+		_power_amt = minf(1.5, (_power_amt if _power_time > 0.0 else 0.0) + 0.15)
+		_power_time = 5.0
 
 
 func _respawn() -> void:

@@ -27,6 +27,10 @@ var trail_on := false
 var explode_radius := 0.0
 var explode_color := Color(1, 0.5, 0.15)
 
+# Split-on-impact (Prism Bolt): bursts into `split_count` lesser shards.
+var split_count := 0
+var split_dmg := 0
+
 var _vel := Vector3.ZERO
 var _color := Color(1, 0.5, 0.15)
 var _trail_t := 0.0
@@ -76,6 +80,32 @@ func set_explode(radius: float, color: Color) -> void:
 	explode_color = color
 
 
+## Optional: split into `count` lesser shards when this projectile ends (Prism Bolt).
+func set_split(count: int, dmg: int) -> void:
+	split_count = count
+	split_dmg = dmg
+
+
+## Spawn the split shards in a forward fan, once. Shards don't split again.
+func _do_split() -> void:
+	if split_count <= 0:
+		return
+	var count := split_count
+	split_count = 0  # fire only once
+	var packed: PackedScene = load("res://scenes/abilities/fireball.tscn")
+	if packed == null:
+		return
+	var base := _vel.normalized() if _vel.length() > 0.01 else direction
+	for i in range(count):
+		var ang := lerpf(-0.6, 0.6, float(i) / float(maxi(1, count - 1)))
+		var d := base.rotated(Vector3.UP, ang)
+		var fb = packed.instantiate()
+		get_tree().current_scene.add_child(fb)
+		fb.global_position = global_position + d * 0.3 + Vector3.UP * 0.1
+		fb.setup(d, split_dmg, speed * 0.9, scale.x * 0.7, _color, false)
+		fb.life = 0.5
+
+
 func _physics_process(delta: float) -> void:
 	if homing > 0.0:
 		var t = _nearest_enemy()
@@ -96,6 +126,7 @@ func _physics_process(delta: float) -> void:
 	if life <= 0.0:
 		if explode_radius > 0.0:
 			_explode()
+		_do_split()
 		queue_free()
 
 
@@ -106,6 +137,7 @@ func _on_body_entered(body: Node) -> void:
 	# Lobbed bombs burst on ANY solid contact (enemy or ground).
 	if explode_radius > 0.0:
 		_explode()
+		_do_split()
 		queue_free()
 		return
 
@@ -121,6 +153,7 @@ func _on_body_entered(body: Node) -> void:
 		_impact_flash()
 		if pierce:
 			return  # keep flying through enemies
+	_do_split()  # Prism Bolt: shatter into shards on impact
 	queue_free()  # pop on a solid hit (wall/ground/tree), or any hit if not piercing
 
 
