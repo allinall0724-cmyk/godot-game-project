@@ -24,7 +24,28 @@ func _ready() -> void:
 		ship.set_camera(camera)
 		ship.set_active(false)
 
-	# Jump straight into gameplay.
+	# Pick a character before play begins (freezes the player; mouse stays free).
+	_show_character_select()
+
+
+## Launch screen: choose a starting look. The player is frozen and the cursor is
+## freed; the live model previews each option. On confirm we apply the chosen
+## appearance and drop into normal gameplay.
+func _show_character_select() -> void:
+	player.set_active(false)
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	var sel := CharacterSelect.new()
+	sel.setup(player.get_node("Humanoid"))  # before add_child: _ready previews option 0
+	add_child(sel)
+	sel.chosen.connect(_on_character_chosen.bind(sel))
+
+
+func _on_character_chosen(preset: Dictionary, sel: CharacterSelect) -> void:
+	var humanoid = player.get_node("Humanoid")  # untyped: custom method call
+	if humanoid.has_method("apply_appearance"):
+		humanoid.apply_appearance(preset)
+	sel.queue_free()
+	player.set_active(true)
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 
