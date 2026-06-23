@@ -176,64 +176,105 @@ func _build_neck() -> void:
 	add_child(n)
 
 
-## Build hair from many small tufts (messy throughout, not a solid block). The
-## chosen hair_style and slight per-tuft random tilt make characters look distinct.
+## Hair as many thin STRANDS laid over the scalp (a hemisphere that leaves the
+## face bare), each draping with the head's curve plus a little random flop, and
+## shaded slightly per-strand for depth. hair_style: 0 short, 1 long, 2 spiky,
+## 3 none. Strands are dense but tiny; helmets/hats still hide them as before.
 func _build_hair() -> void:
 	for c in hair_node.get_children():
 		c.queue_free()
-	var tufts := _hair_tufts(hair_style)
-	var i := 0
-	for t in tufts:
-		var tuft := MeshInstance3D.new()
+	if hair_style == 3:
+		return  # bald (skeletons / some helmets)
+	var hc := Vector3(0.0, 0.62, 0.0)   # head centre (humanoid local space)
+	var rad := 0.17                     # head radius
+	var spiky := hair_style == 2
+	var longhair := hair_style == 1
+	# Scalp coverage: latitude rings from the crown down past the ears; each ring's
+	# strand count scales with its circumference so coverage stays even.
+	var theta_max := deg_to_rad(70.0) if spiky else deg_to_rad(118.0)
+	var rings := 7
+	for ri in range(rings):
+		var theta := lerpf(deg_to_rad(6.0), theta_max, float(ri) / float(rings - 1))
+		var ring_n := maxi(4, int(round(sin(theta) * (7.0 if spiky else 11.0))))
+		for k in range(ring_n):
+			var a := TAU * (float(k) / float(ring_n)) + ri * 0.4   # stagger rings
+			var dir := Vector3(sin(a) * sin(theta), cos(theta), -cos(a) * sin(theta))
+			# Leave the face bare: skip front strands below the hairline.
+			if dir.z < -0.02 and dir.y < 0.45:
+				continue
+			# Scalp strands stop near ear level; long locks (below) do the drop.
+			if dir.y < -0.18:
+				continue
+			_add_strand(hc, rad, dir, spiky, false)
+	# Long hair: a curtain of longer locks around the back and sides (not the face).
+	if longhair:
+		var lock_n := 14
+		var ltheta := deg_to_rad(96.0)
+		for k in range(lock_n):
+			var a := deg_to_rad(lerpf(58.0, 302.0, float(k) / float(lock_n - 1)))
+			var dir := Vector3(sin(a) * sin(ltheta), cos(ltheta), -cos(a) * sin(ltheta))
+			_add_strand(hc, rad, dir, false, true)
+
+
+## One hair strand: a thin tapered/elongated piece sitting on the scalp at surface
+## point `hc + dir*rad`, its length axis flowing outward then drooping (or rising,
+## for spikes). `lock` = a long drape for long hair.
+func _add_strand(hc: Vector3, rad: float, dir: Vector3, spiky: bool, lock: bool) -> void:
+	dir = dir.normalized()
+	var base := hc + dir * (rad * 0.96)
+	var flow: Vector3
+	var length: float
+	var width: float
+	if spiky:
+		flow = (dir + Vector3.UP * 0.7).normalized()
+		length = randf_range(0.16, 0.24)
+		width = randf_range(0.028, 0.040)
+	elif lock:
+		flow = (dir * 0.35 + Vector3.DOWN).normalized()
+		length = randf_range(0.30, 0.50)
+		width = randf_range(0.050, 0.075)
+	else:
+		flow = (dir * 0.5 + Vector3.DOWN * 0.7).normalized()
+		length = randf_range(0.10, 0.17)
+		width = randf_range(0.030, 0.045)
+	# Small random flop so strands aren't perfectly uniform.
+	flow = (flow + Vector3(randf_range(-0.12, 0.12), randf_range(-0.08, 0.05), randf_range(-0.12, 0.12))).normalized()
+	var strand := MeshInstance3D.new()
+	if spiky:
+		strand.mesh = _cone(width, length)          # pointed spike
+	else:
 		var bm := BoxMesh.new()
-		bm.size = t["size"]
-		tuft.mesh = bm
-		tuft.position = t["pos"]
-		tuft.rotation = Vector3(randf_range(-0.25, 0.25), randf_range(-0.5, 0.5), randf_range(-0.25, 0.25))
-		var shade: Color = hair_color if i % 2 == 0 else hair_color.darkened(0.22)
-		var m := StandardMaterial3D.new()
-		m.albedo_color = shade
-		tuft.material_override = m
-		hair_node.add_child(tuft)
-		i += 1
+		bm.size = Vector3(width, length, width)      # elongated along local +Y
+		strand.mesh = bm
+	# Orient the strand's +Y (its length axis) along `flow`.
+	var up := Vector3.FORWARD if absf(flow.y) > 0.9 else Vector3.UP
+	strand.transform.basis = _basis_from_y(flow, up)
+	strand.position = base + flow * (length * 0.45)
+	# Per-strand shading for depth (roots/lowlights darker, occasional highlight).
+	var f := randf()
+	var shade: Color = hair_color
+	if f < 0.30:
+		shade = hair_color.darkened(0.18)
+	elif f > 0.78:
+		shade = hair_color.lightened(0.14)
+	var m := StandardMaterial3D.new()
+	m.albedo_color = shade
+	m.roughness = 0.62          # a little sheen reads as hair, not felt
+	m.metallic = 0.0
+	strand.material_override = m
+	hair_node.add_child(strand)
 
 
-## Tuft layouts per style. Positions are in the humanoid's local space (head is
-## centered near y=0.62, radius ~0.17).
-func _hair_tufts(style: int) -> Array:
-	if style == 3:
-		return []  # bald (skeletons / some helmets)
-	# Scalp cap shared by short/long styles.
-	var cap := [
-		{"pos": Vector3(0.0, 0.79, -0.02), "size": Vector3(0.13, 0.12, 0.13)},
-		{"pos": Vector3(0.1, 0.77, 0.02), "size": Vector3(0.11, 0.12, 0.11)},
-		{"pos": Vector3(-0.1, 0.77, 0.02), "size": Vector3(0.11, 0.12, 0.11)},
-		{"pos": Vector3(0.07, 0.75, -0.12), "size": Vector3(0.1, 0.12, 0.1)},
-		{"pos": Vector3(-0.07, 0.75, -0.12), "size": Vector3(0.1, 0.12, 0.1)},
-		{"pos": Vector3(0.09, 0.74, 0.12), "size": Vector3(0.1, 0.11, 0.1)},
-		{"pos": Vector3(-0.09, 0.74, 0.12), "size": Vector3(0.1, 0.11, 0.1)},
-		{"pos": Vector3(0.15, 0.72, 0.0), "size": Vector3(0.09, 0.11, 0.11)},
-		{"pos": Vector3(-0.15, 0.72, 0.0), "size": Vector3(0.09, 0.11, 0.11)},
-		{"pos": Vector3(0.0, 0.72, 0.15), "size": Vector3(0.12, 0.11, 0.1)},
-	]
-	if style == 2:
-		# Spiky: fewer, taller tufts pointing up.
-		return [
-			{"pos": Vector3(0.0, 0.85, -0.02), "size": Vector3(0.09, 0.24, 0.09)},
-			{"pos": Vector3(0.1, 0.83, 0.0), "size": Vector3(0.08, 0.2, 0.08)},
-			{"pos": Vector3(-0.1, 0.83, 0.0), "size": Vector3(0.08, 0.2, 0.08)},
-			{"pos": Vector3(0.05, 0.83, -0.11), "size": Vector3(0.08, 0.2, 0.08)},
-			{"pos": Vector3(-0.05, 0.83, -0.11), "size": Vector3(0.08, 0.2, 0.08)},
-			{"pos": Vector3(0.0, 0.83, 0.12), "size": Vector3(0.08, 0.18, 0.08)},
-		]
-	if style == 1:
-		# Longer: cap + pieces hanging down the back and sides.
-		var long := cap.duplicate()
-		long.append({"pos": Vector3(0.0, 0.6, 0.17), "size": Vector3(0.18, 0.26, 0.1)})
-		long.append({"pos": Vector3(-0.17, 0.6, 0.06), "size": Vector3(0.1, 0.24, 0.13)})
-		long.append({"pos": Vector3(0.17, 0.6, 0.06), "size": Vector3(0.1, 0.24, 0.13)})
-		return long
-	return cap  # style 0 (short messy)
+## Build an orthonormal basis whose +Y column points along `yaxis` (used to aim a
+## strand's length axis). `up_hint` just needs to be non-parallel to yaxis.
+func _basis_from_y(yaxis: Vector3, up_hint: Vector3) -> Basis:
+	var y := yaxis.normalized()
+	var x := up_hint.cross(y)
+	if x.length() < 0.001:
+		x = Vector3.RIGHT.cross(y)
+	x = x.normalized()
+	var z := x.cross(y).normalized()
+	return Basis(x, y, z)
 
 
 ## Simple block hands at the end of each arm (move with the arm pivots).
