@@ -13,6 +13,9 @@ extends Node3D
 # automatically if you re-add a "Ship" node (instance scenes/ship/ship.tscn).
 @onready var ship = get_node_or_null("Ship")
 
+# Where the chosen starting character is remembered between sessions.
+const SAVE_PATH := "user://save.cfg"
+
 var piloting := false
 
 
@@ -24,13 +27,19 @@ func _ready() -> void:
 		ship.set_camera(camera)
 		ship.set_active(false)
 
-	# Pick a character before play begins (freezes the player; mouse stays free).
-	_show_character_select()
+	# First load only: pick a character. On later loads we restore the saved one
+	# and drop straight into gameplay.
+	var saved := _load_saved_character()
+	if saved.is_empty():
+		_show_character_select()
+	else:
+		_apply_appearance(saved)
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 
 ## Launch screen: choose a starting look. The player is frozen and the cursor is
 ## freed; the live model previews each option. On confirm we apply the chosen
-## appearance and drop into normal gameplay.
+## appearance, remember it, and drop into normal gameplay.
 func _show_character_select() -> void:
 	player.set_active(false)
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
@@ -41,12 +50,39 @@ func _show_character_select() -> void:
 
 
 func _on_character_chosen(preset: Dictionary, sel: CharacterSelect) -> void:
-	var humanoid = player.get_node("Humanoid")  # untyped: custom method call
-	if humanoid.has_method("apply_appearance"):
-		humanoid.apply_appearance(preset)
+	_apply_appearance(preset)
+	_save_character(str(preset.get("name", "")))
 	sel.queue_free()
 	player.set_active(true)
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+
+func _apply_appearance(preset: Dictionary) -> void:
+	var humanoid = player.get_node("Humanoid")  # untyped: custom method call
+	if humanoid.has_method("apply_appearance"):
+		humanoid.apply_appearance(preset)
+
+
+## Return the saved starting character's preset, or {} if none is saved yet (or the
+## saved name no longer exists — in which case the picker shows again).
+func _load_saved_character() -> Dictionary:
+	var cfg := ConfigFile.new()
+	if cfg.load(SAVE_PATH) != OK:
+		return {}
+	var saved_name := str(cfg.get_value("character", "name", ""))
+	if saved_name == "":
+		return {}
+	for p in CharacterPresets.PRESETS:
+		if str((p as Dictionary).get("name", "")) == saved_name:
+			return p
+	return {}
+
+
+func _save_character(saved_name: String) -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(SAVE_PATH)  # preserve any other saved sections
+	cfg.set_value("character", "name", saved_name)
+	cfg.save(SAVE_PATH)
 
 
 func _unhandled_input(event: InputEvent) -> void:
