@@ -199,6 +199,16 @@ func _explode() -> void:
 
 
 func _impact_flash() -> void:
+	# A brief point-light pop so impacts read as bright (fire/lightning especially).
+	var fl := OmniLight3D.new()
+	fl.light_color = _color
+	fl.light_energy = 3.0
+	fl.omni_range = 2.5
+	get_tree().current_scene.add_child(fl)
+	fl.global_position = global_position
+	var ftw := fl.create_tween()
+	ftw.tween_property(fl, "light_energy", 0.0, 0.18)
+	ftw.tween_callback(fl.queue_free)
 	for i in range(5):
 		var m := _glow(0.12, _color)
 		m.global_position = global_position
@@ -210,11 +220,21 @@ func _impact_flash() -> void:
 
 
 func _spawn_trail() -> void:
-	var m := _glow(0.13 * scale.x, _color)
-	m.global_position = global_position
+	# Core puff with a slight flicker in size/position so the trail shimmers.
+	var m := _glow(randf_range(0.1, 0.16) * scale.x, _color)
+	m.global_position = global_position + Vector3(randf_range(-0.08, 0.08), randf_range(-0.08, 0.08), randf_range(-0.08, 0.08))
 	var tw := m.create_tween().set_parallel(true)
-	tw.tween_property(m, "scale", Vector3.ONE * 0.02, 0.28)
+	tw.tween_property(m, "scale", Vector3.ONE * 0.02, randf_range(0.22, 0.34))
 	tw.chain().tween_callback(m.queue_free)
+	# Occasional brighter ember/spark that drifts off the trail.
+	if randf() < 0.5:
+		var ember := _glow(0.06 * scale.x, _color.lerp(Color(1, 1, 1), 0.4))
+		ember.global_position = global_position
+		var drift := global_position + Vector3(randf_range(-0.5, 0.5), randf_range(-0.3, 0.5), randf_range(-0.5, 0.5))
+		var tw2 := ember.create_tween().set_parallel(true)
+		tw2.tween_property(ember, "global_position", drift, 0.4)
+		tw2.tween_property(ember, "scale", Vector3.ONE * 0.02, 0.4)
+		tw2.chain().tween_callback(ember.queue_free)
 
 
 func _glow(r: float, col: Color) -> MeshInstance3D:

@@ -35,6 +35,14 @@ var _dot_dps := 0.0       # damage-over-time (curses, scorched earth, poison...)
 var _dot_time := 0.0
 var _dot_tick := 0.0
 
+# Pass 8 statuses.
+var _vuln_extra := 0.0    # bonus fraction of damage taken (0.5 = +50%)
+var _vuln_time := 0.0
+var _poly_time := 0.0     # polymorphed: harmless (can't move/attack), shrunk
+var _charm_time := 0.0    # charmed: fights the nearest OTHER enemy
+var _banish_time := 0.0   # banished: removed from the fight (hidden, inert)
+var _base_scale := Vector3.ONE
+
 @onready var humanoid = $Humanoid
 
 
@@ -49,6 +57,20 @@ func apply_root(duration: float) -> void:
 func apply_fear(duration: float) -> void:
 	_fear_time = maxf(_fear_time, duration)
 
+## Pass 8 hooks.
+func apply_vulnerable(extra: float, duration: float) -> void:
+	_vuln_extra = maxf(_vuln_extra, extra)
+	_vuln_time = maxf(_vuln_time, duration)
+
+func apply_polymorph(duration: float) -> void:
+	_poly_time = maxf(_poly_time, duration)
+
+func apply_charm(duration: float) -> void:
+	_charm_time = maxf(_charm_time, duration)
+
+func apply_banish(duration: float) -> void:
+	_banish_time = maxf(_banish_time, duration)
+
 ## Lingering damage over time (curses / DoT zones). Refreshes to the stronger one.
 func apply_dot(dps: float, duration: float) -> void:
 	_dot_dps = maxf(_dot_dps, dps)
@@ -58,6 +80,7 @@ func apply_dot(dps: float, duration: float) -> void:
 func _ready() -> void:
 	add_to_group("enemies")
 	health = max_health
+	_base_scale = humanoid.scale
 	_pick_new_wander()
 
 
@@ -71,6 +94,8 @@ func apply_knockback(impulse: Vector3) -> void:
 
 ## Called by the player's attack hitbox / spells. amount is how much health to remove.
 func take_damage(amount: int) -> void:
+	if _vuln_time > 0.0:
+		amount = int(round(float(amount) * (1.0 + _vuln_extra)))  # Vulnerability / armor shred
 	health -= amount
 	DamageNumber.spawn(get_tree().current_scene, global_position + Vector3.UP * 1.1, amount)
 	_flash()
@@ -87,8 +112,30 @@ func _die() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Banished: hidden and inert until it wears off.
+	if _banish_time > 0.0:
+		_banish_time -= delta
+		visible = false
+		velocity = Vector3.ZERO
+		if _banish_time <= 0.0:
+			visible = true
+		return
+
 	if _attack_cd > 0.0:
 		_attack_cd -= delta
+
+	# Pass 8 status ticks.
+	if _vuln_time > 0.0:
+		_vuln_time -= delta
+		if _vuln_time <= 0.0:
+			_vuln_extra = 0.0
+	if _poly_time > 0.0:
+		_poly_time -= delta
+		humanoid.scale = _base_scale * 0.5
+		if _poly_time <= 0.0:
+			humanoid.scale = _base_scale
+	if _charm_time > 0.0:
+		_charm_time -= delta
 
 	# Tick status timers.
 	if _slow_time > 0.0:
@@ -126,8 +173,8 @@ func _physics_process(delta: float) -> void:
 		to_target = target.global_position - global_position
 		to_target.y = 0.0
 
-	if _root_time > 0.0:
-		# Frozen in place — no movement, no attacks.
+	if _root_time > 0.0 or _poly_time > 0.0:
+		# Frozen/polymorphed in place — no movement, no attacks.
 		desired = Vector3.ZERO
 		facing = to_target
 	elif _fear_time > 0.0 and target != null:
@@ -161,6 +208,9 @@ func _physics_process(delta: float) -> void:
 ## Find who to attack: a decoy in range distracts first; otherwise the player
 ## (unless they are stealthed). Returns null if nothing is targetable.
 func _find_target():
+	# Charmed: turn on the nearest other enemy instead of the player.
+	if _charm_time > 0.0:
+		return _nearest_other_enemy()
 	var decoy = _nearest_in_group("decoys")
 	if decoy != null and global_position.distance_to(decoy.global_position) < detect_range:
 		return decoy
@@ -170,6 +220,20 @@ func _find_target():
 			return null
 		return player
 	return null
+
+
+## Nearest other enemy (used while charmed).
+func _nearest_other_enemy():
+	var best = null
+	var best_d := INF
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if e == self:
+			continue
+		var d := global_position.distance_to(e.global_position)
+		if d < best_d:
+			best_d = d
+			best = e
+	return best
 
 
 func _nearest_in_group(group: String):

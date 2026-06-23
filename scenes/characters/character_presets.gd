@@ -27,7 +27,7 @@ const PRESETS := [
 		"name": "Bram",
 		"blurb": "Hill wanderer",
 		"body_type": 0,
-		"hair_style": 2,
+		"hair_style": 0,
 		"skin_color": Color(0.55, 0.40, 0.30),
 		"hair_color": Color(0.08, 0.07, 0.07),
 		"tunic_color": Color(0.26, 0.40, 0.28),

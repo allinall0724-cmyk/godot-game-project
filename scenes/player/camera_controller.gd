@@ -14,6 +14,9 @@ const LOOK_AT_HEIGHT := 0.8     # aim point above the target's origin
 const PITCH_MIN := -1.2         # ~-69 deg (looking down)
 const PITCH_MAX := 0.6          # ~+34 deg (looking up)
 const FOLLOW_SMOOTHNESS := 12.0 # higher = snappier
+const ZOOM_DISTANCE_MULT := 0.72 # hold RMB: pull in to ~72% distance (modest)
+const ZOOM_SMOOTHNESS := 8.0    # how fast the zoom eases in/out
+const ZOOM_LOOK_MULT := 0.45    # hold RMB: slower, more precise mouse-look (aim feel)
 
 @onready var camera_3d: Camera3D = $Camera3D
 
@@ -21,6 +24,7 @@ var target: Node3D = null
 var pitch := -0.3
 var yaw := 0.0
 var _base_fov := 75.0
+var _dist_mult := 1.0           # current follow-distance multiplier (RMB zoom)
 
 
 func set_target(new_target: Node3D) -> void:
@@ -43,8 +47,13 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	# Mouse look (only while the mouse is captured)
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-		yaw -= event.relative.x * sensitivity
-		pitch -= event.relative.y * sensitivity
+		# Holding right-click (zoom) slows the turn rate for precise aiming; the
+		# crosshair is unchanged — only the look speed drops.
+		var s := sensitivity
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+			s *= ZOOM_LOOK_MULT
+		yaw -= event.relative.x * s
+		pitch -= event.relative.y * s
 		pitch = clamp(pitch, PITCH_MIN, PITCH_MAX)
 
 
@@ -56,8 +65,11 @@ func _physics_process(delta: float) -> void:
 	if target == null:
 		return
 	var forward := get_forward_direction()
+	# Hold right mouse (while in gameplay) to gently zoom in; release eases back out.
+	var want_mult := ZOOM_DISTANCE_MULT if (Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)) else 1.0
+	_dist_mult = lerpf(_dist_mult, want_mult, clamp(ZOOM_SMOOTHNESS * delta, 0.0, 1.0))
 	var pivot := target.global_position + Vector3.UP * LOOK_AT_HEIGHT
-	var desired := target.global_position - forward * FOLLOW_DISTANCE + Vector3.UP * FOLLOW_HEIGHT
+	var desired := target.global_position - forward * (FOLLOW_DISTANCE * _dist_mult) + Vector3.UP * FOLLOW_HEIGHT
 	# Pull the camera in if terrain/props would be between it and the player.
 	desired = _avoid_obstacles(pivot, desired)
 	# Smoothly glide to the desired position so target swaps aren't jarring.

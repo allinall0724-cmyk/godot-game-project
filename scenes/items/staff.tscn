@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dn0staff00001"]
 
-[ext_resource type="Script" path="res://scenes/items/sword_fx.gd" id="1_fx"]
+[ext_resource type="Script" path="res://scenes/items/staff_fx.gd" id="1_fx"]
 
 [sub_resource type="CylinderMesh" id="1_shaft"]
 top_radius = 0.022

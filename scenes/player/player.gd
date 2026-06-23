@@ -21,6 +21,16 @@ const FRICTION := 10.0
 const GRAVITY := 22.0
 const BASE_JUMP_VELOCITY := 7.5
 
+# Dodge / roll / flip (dash & phase spells) travel multiplier — bumps DISTANCE only
+# (the per-spell stamina cost and cooldown are unchanged).
+const DASH_SPEED_MULT := 1.7
+
+# Long-range "shot" projectiles (fast, non-lobbed) get a SUBTLE gravity arc so they
+# fly like a real projectile instead of a laser-straight line — gentle enough to stay
+# precise at range. Lobbed/arc spells and ones with explicit gravity are untouched.
+const LONG_RANGE_SPEED := 28.0   # shots at/above this speed arc
+const LONG_RANGE_DROP := 4.5     # gentle downward accel for the arc
+
 # --- Attack tuning (the STAFF is the basic-attack weapon) ---
 # The player always wields a single staff. Melee damage scales with its tier (see
 # get_attack_damage()); the directional/charge/dodge melee mechanics are unchanged.
@@ -106,7 +116,7 @@ const SPELLS := {
 	"earthquake":    {"name": "Earthquake", "effect": "quake", "cost": 45, "cd": 6.0, "windup": 0.5, "radius": 8.0, "dmg": 8, "force": 14.0, "element": "earth", "color": EARTH_COL},
 
 	# --- Gun-style (magic ranged archetypes) ---
-	"arc_sniper":    {"name": "Arc Sniper", "effect": "beam", "cost": 26, "cd": 2.0, "windup": 0.35, "zoom": true, "range": 60.0, "dmg": 16, "element": "lightning", "color": LTNG_COL},
+	"arc_sniper":    {"name": "Arc Sniper", "effect": "projectile", "cost": 26, "cd": 2.0, "windup": 0.35, "zoom": true, "count": 1, "size": 0.7, "speed": 70.0, "dmg": 16, "element": "lightning", "color": LTNG_COL},
 	"ember_burst":   {"name": "Ember Burst", "effect": "shotgun", "cost": 22, "cd": 1.0, "pellets": 8, "spread": 0.55, "speed": 28.0, "size": 0.7, "dmg": 3, "element": "fire", "color": FIRE_COL},
 	"spark_repeater":{"name": "Spark Repeater", "effect": "rapid", "cost": 20, "cd": 1.2, "shots": 6, "interval": 0.08, "speed": 38.0, "size": 0.5, "dmg": 2, "element": "lightning", "color": LTNG_COL},
 
@@ -189,7 +199,7 @@ const SPELLS := {
 	"entangling_vines":{"name": "Entangling Vines", "effect": "debuff", "cost": 20, "cd": 2.5, "status": "root", "radius": 4.5, "duration": 2.0, "dot": 3.0, "element": "nature", "color": NATURE_COL},
 	"glacial_spike":  {"name": "Glacial Spike", "effect": "projectile", "cost": 18, "cd": 1.0, "count": 1, "size": 1.3, "speed": 24.0, "dmg": 6, "slow": 0.2, "slow_dur": 3.0, "element": "ice", "color": ICE_COL},
 	"comet_storm":    {"name": "Comet Storm", "effect": "projectile", "cost": 26, "cd": 1.4, "count": 4, "size": 0.7, "speed": 20.0, "dmg": 3, "homing": 5.0, "element": "fire", "color": FIRE_COL},
-	"quicksand":      {"name": "Quicksand", "effect": "zone", "cost": 22, "cd": 4.0, "radius": 4.0, "life": 7.0, "slow": 0.3, "slow_dur": 1.0, "dot": 2.0, "element": "earth", "color": Color(0.5, 0.42, 0.26)},
+	"quicksand":      {"name": "Quicksand", "effect": "quicksand", "cost": 22, "cd": 4.0, "radius": 4.0, "life": 7.0, "max_slow": 0.25, "ramp": 0.5, "dot": 1.5, "element": "earth", "color": Color(0.5, 0.42, 0.26)},
 	"venom_spray":    {"name": "Venom Spray", "effect": "shotgun", "cost": 22, "cd": 1.0, "pellets": 7, "spread": 0.5, "speed": 24.0, "size": 0.6, "dmg": 2, "dot": 2.5, "dot_dur": 3.0, "element": "nature", "color": NATURE_COL},
 	"ward_of_light":  {"name": "Ward of Light", "effect": "buff", "cost": 18, "cd": 10.0, "buff": "shield", "amount": 0.45, "duration": 10.0, "element": "light", "color": LIGHT_COL},
 
@@ -202,6 +212,45 @@ const SPELLS := {
 	"ice_comet":       {"name": "Ice Comet", "effect": "meteor", "cost": 30, "cd": 2.2, "windup": 0.6, "size": 2.0, "dmg": 9, "radius": 3.4, "element": "ice", "color": ICE_COL},
 	"shadow_bolt":     {"name": "Shadow Bolt", "effect": "projectile", "cost": 14, "cd": 0.6, "count": 1, "size": 0.9, "speed": 28.0, "dmg": 3, "dot": 2.5, "dot_dur": 3.0, "element": "shadow", "color": SHADOW_COL},
 	"sanctified_ground":{"name": "Sanctified Ground", "effect": "heal_zone", "cost": 20, "cd": 8.0, "radius": 4.0, "life": 8.0, "heal": 4, "element": "light", "color": LIGHT_COL},
+
+	# === Pass 8 — new mechanics: control / mobility / utility / support / meta ===
+	# Control
+	"polymorph":     {"name": "Polymorph", "effect": "polymorph", "cost": 24, "cd": 6.0, "radius": 3.5, "duration": 4.0, "element": "arcane", "color": ARCANE_COL},
+	"petrify":       {"name": "Petrify", "effect": "petrify", "cost": 22, "cd": 4.0, "radius": 3.5, "duration": 2.5, "vuln": 0.6, "element": "earth", "color": EARTH_COL},
+	"banish":        {"name": "Banish", "effect": "banish", "cost": 20, "cd": 5.0, "duration": 3.0, "element": "arcane", "color": Color(0.72, 0.6, 1.0)},
+	"charm":         {"name": "Charm", "effect": "charm", "cost": 22, "cd": 6.0, "duration": 5.0, "element": "shadow", "color": Color(0.92, 0.5, 0.82)},
+	"taunt_totem":   {"name": "Taunt Totem", "effect": "taunt", "cost": 16, "cd": 6.0, "life": 8.0, "element": "arcane", "color": ARCANE_COL},
+	"time_stop":     {"name": "Time Stop", "effect": "timestop", "cost": 40, "cd": 9.0, "radius": 5.5, "duration": 2.5, "element": "arcane", "color": Color(0.82, 0.9, 1.0)},
+	"gravity_flip":  {"name": "Gravity Flip", "effect": "gravflip", "cost": 30, "cd": 6.0, "radius": 5.0, "duration": 2.5, "dmg": 3, "element": "arcane", "color": Color(0.6, 0.5, 0.92)},
+	"magnetize":     {"name": "Magnetize", "effect": "magnetize", "cost": 26, "cd": 5.0, "radius": 9.0, "force": 12.0, "ticks": 6, "vuln": 0.4, "element": "earth", "color": Color(0.72, 0.55, 0.32)},
+	# Mobility / utility
+	"grapple":       {"name": "Grapple", "effect": "grapple", "cost": 10, "cd": 1.0, "range": 16.0, "speed": 36.0, "element": "wind", "color": WIND_COL},
+	"recall":        {"name": "Recall", "effect": "recall", "cost": 12, "cd": 1.0, "element": "arcane", "color": ARCANE_COL},
+	"phase_walk":    {"name": "Phase Walk", "effect": "phasewalk", "cost": 18, "cd": 5.0, "duration": 2.5, "element": "arcane", "color": Color(0.72, 0.82, 1.0)},
+	"conjure_bridge":{"name": "Conjure Bridge", "effect": "bridge", "cost": 16, "cd": 3.0, "segments": 5, "life": 8.0, "element": "sky", "color": SKY_COL},
+	"telekinesis":   {"name": "Telekinesis", "effect": "telekinesis", "cost": 18, "cd": 1.2, "range": 12.0, "force": 18.0, "dmg": 5, "element": "arcane", "color": ARCANE_COL},
+	# Damage archetypes
+	"ricochet":      {"name": "Ricochet Bolt", "effect": "ricochet", "cost": 18, "cd": 0.9, "bounces": 5, "range": 9.0, "dmg": 4, "element": "lightning", "color": LTNG_COL},
+	"seeking_swarm": {"name": "Seeking Swarm", "effect": "swarm", "cost": 26, "cd": 2.0, "waves": 3, "per_wave": 4, "dmg": 2, "homing": 6.0, "element": "nature", "color": NATURE_COL},
+	"corpse_blast":  {"name": "Corpse Blast", "effect": "corpse_blast", "cost": 22, "cd": 2.0, "radius": 4.5, "dmg": 5, "execute": 0.5, "element": "shadow", "color": SHADOW_COL},
+	"static_field":  {"name": "Static Field", "effect": "static_field", "cost": 24, "cd": 4.0, "radius": 4.5, "life": 6.0, "dmg": 2, "element": "lightning", "color": LTNG_COL},
+	"acid_spray":    {"name": "Acid Spray", "effect": "acid", "cost": 20, "cd": 1.0, "pellets": 7, "spread": 0.5, "speed": 24.0, "size": 0.6, "dmg": 2, "vuln": 0.4, "vuln_dur": 4.0, "dot": 2.0, "element": "nature", "color": Color(0.62, 0.85, 0.22)},
+	"vuln_mark":     {"name": "Vulnerability Mark", "effect": "mark", "cost": 10, "cd": 1.5, "range": 14.0, "vuln": 0.5, "duration": 6.0, "element": "shadow", "color": SHADOW_COL},
+	"rune_bomb":     {"name": "Rune Bomb", "effect": "delayed_bomb", "cost": 20, "cd": 2.0, "fuse": 1.6, "radius": 4.0, "dmg": 10, "element": "fire", "color": FIRE_COL},
+	"sonic_lance":   {"name": "Sonic Lance", "effect": "sonic", "cost": 20, "cd": 1.4, "range": 36.0, "width": 1.8, "dmg": 5, "fear": 1.5, "element": "wind", "color": Color(0.82, 0.9, 1.0)},
+	# Defensive / support
+	"bubble_dome":   {"name": "Bubble Dome", "effect": "dome", "cost": 22, "cd": 8.0, "radius": 3.2, "life": 6.0, "element": "arcane", "color": Color(0.6, 0.8, 1.0)},
+	"lifelink":      {"name": "Lifelink", "effect": "buff", "cost": 16, "cd": 10.0, "buff": "lifelink", "amount": 4.0, "duration": 10.0, "element": "nature", "color": NATURE_COL},
+	"spell_ward":    {"name": "Spell Ward", "effect": "buff", "cost": 18, "cd": 9.0, "buff": "ward", "amount": 0.5, "duration": 6.0, "element": "light", "color": LIGHT_COL},
+	"overload":      {"name": "Overload", "effect": "overload", "cost": 0, "cd": 12.0, "amount": 1.0, "duration": 8.0, "hp_cost": 20, "element": "fire", "color": FIRE_COL},
+	"echo":          {"name": "Echo", "effect": "echo", "cost": 10, "cd": 3.0, "element": "arcane", "color": ARCANE_COL},
+	# Summon
+	"raise_undead":  {"name": "Raise Undead", "effect": "summon", "cost": 30, "cd": 8.0, "kind": "undead", "dmg": 2, "life": 14.0, "element": "shadow", "color": Color(0.5, 0.62, 0.5)},
+
+	# === Pass 9 — portal + ramping quicksand (paired with terrain-hugging zones) ===
+	# Portal: cast once to drop the entrance, again to drop the linked exit. Walk
+	# through either (so can enemies) to teleport to the other; both fade after `life`.
+	"portal":        {"name": "Portal", "effect": "portal", "cost": 18, "cd": 1.0, "life": 14.0, "element": "arcane", "color": ARCANE_COL},
 }
 
 # Until leveling exists, start with a varied 5-spell loadout (bound to Q/R/F/C/V).
@@ -257,6 +306,14 @@ var _invuln_time := 0.0            # Phase Dash i-frames (take no damage)
 var _pound_params := {}            # params for the pending pound AoE
 var _meteor_target := Vector3.ZERO # landing point fixed at cast (telegraph + impact)
 
+# Pass 8 state.
+var _recall_point = null           # Recall: stored return marker (Vector3 or null)
+var _last_spell: Dictionary = {}   # Echo: last non-echo spell cast (for free recast)
+var _hp_regen_time := 0.0          # Lifelink: heal-over-time buff
+var _hp_regen_amt := 0.0
+var _hp_regen_tick := 0.0
+var _portal_pending = null         # Portal: the first (unlinked) portal awaiting its pair
+
 # Dash trail (Flame Dash): damages enemies along the path and leaves flames.
 var _trail_time := 0.0
 var _trail_color := Color(1, 0.5, 0.1)
@@ -270,6 +327,9 @@ var _trail_hit: Array = []
 # separately (see equipped_spells), not tied to the staff item.
 # Testing flag: start with the full armor catalog in the inventory (see _ready).
 const GRANT_TEST_ARMOR := true
+# Dev account: start fully leveled with every spell learned and all spell slots
+# unlocked (the "harder leveling" curve below then only affects fresh accounts).
+const GRANT_TEST_UNLOCKS := true
 const STARTING_STAFF := {
 	"name": "Apprentice Staff",
 	"rarity": "Common",
@@ -308,11 +368,14 @@ var _regen_delay := 0.0
 var is_sprinting := false
 
 # --- Leveling / XP ---
-# Kill enemies -> gain XP -> level up. Each level: +1 usable spell slot (up to
-# MAX_SPELLS), unlocks the next spell in LEVEL_SPELL_ORDER, and grows max HP/stamina.
+# Kill enemies -> gain XP -> level up. Leveling is intentionally SLOW (steep XP
+# curve, see xp_to_next). A new usable spell slot unlocks every 10 levels (up to
+# MAX_SPELLS, see _slots_for_level); each level also grows max HP/stamina and
+# unlocks the next curated spell in LEVEL_SPELL_ORDER.
 const HP_PER_LEVEL := 10        # max health added per level
 const STA_PER_LEVEL := 6.0      # max stamina added per level
-const MAX_LEVEL := 12
+const MAX_LEVEL := 50           # five spell slots reached at level 40 (one per 10)
+const LEVELS_PER_SLOT := 10     # a new spell slot every this many levels
 # Spells unlocked one-per-level (index 0 = the spell you start with at level 1).
 const LEVEL_SPELL_ORDER := [
 	"fireball", "lightning_zap", "levitate", "gust", "meteor",
@@ -352,9 +415,15 @@ func _ready() -> void:
 			add_item(item)
 
 	# Start at level 1 knowing only the first spell, with a single ability slot.
-	# More slots/spells unlock as you gain XP from kills (see gain_xp / _level_up).
+	# More slots/spells unlock as you gain XP from kills (see gain_xp / _level_up);
+	# a new spell slot every LEVELS_PER_SLOT levels (see _slots_for_level).
 	unlocked_spells = [LEVEL_SPELL_ORDER[0]]
-	spell_slots = 1
+	spell_slots = _slots_for_level(level)
+	if GRANT_TEST_UNLOCKS:
+		# Dev account: max level, every spell in the catalog learned, all slots open.
+		level = MAX_LEVEL
+		unlocked_spells = SPELLS.keys()
+		spell_slots = MAX_SPELLS
 	_rebuild_loadout()
 	max_health = get_max_health()
 	health = max_health
@@ -658,6 +727,12 @@ func _update_buffs(delta: float) -> void:
 		_shield_time -= delta
 	if _regen_buff_time > 0.0:
 		_regen_buff_time -= delta
+	if _hp_regen_time > 0.0:
+		_hp_regen_time -= delta
+		_hp_regen_tick -= delta
+		if _hp_regen_tick <= 0.0:
+			_hp_regen_tick = 0.5
+			heal(int(_hp_regen_amt))
 	if _counter_time > 0.0:
 		_counter_time -= delta
 	if _invuln_time > 0.0:
@@ -761,9 +836,17 @@ func _cycle_spellbook_slot() -> void:
 
 # --- Leveling / XP ---
 
-## XP required to advance FROM the current level to the next.
+## XP required to advance FROM the current level to the next. Steep (quadratic)
+## curve so leveling is a long grind: 50, 95, 150, 215, ... 815 (lv10) ... 2615 (lv20).
 func xp_to_next() -> int:
-	return 20 + (level - 1) * 15   # 20, 35, 50, 65, ...
+	var l := level - 1
+	return 50 + l * 40 + l * l * 5
+
+
+## How many spell slots are usable at a given level: one to start, +1 every
+## LEVELS_PER_SLOT levels, capped at MAX_SPELLS. (1, then 2 at lv10, ... 5 at lv40.)
+func _slots_for_level(lv: int) -> int:
+	return clampi(1 + lv / LEVELS_PER_SLOT, 1, MAX_SPELLS)
 
 
 ## Award XP (called by enemies on death). Rolls over into as many levels as earned.
@@ -787,7 +870,7 @@ func _rebuild_loadout() -> void:
 
 func _level_up() -> void:
 	level += 1
-	spell_slots = mini(MAX_SPELLS, level)
+	spell_slots = _slots_for_level(level)
 	# Learn the spell assigned to this level (if the order defines one).
 	var idx := level - 1
 	if idx < LEVEL_SPELL_ORDER.size():
@@ -820,6 +903,9 @@ func _cast_spell(spell: Dictionary) -> void:
 
 
 func _run_effect(mv: Dictionary) -> void:
+	# Remember the last real spell so Echo can recast it (Echo itself doesn't count).
+	if str(mv.get("effect", "")) != "echo":
+		_last_spell = mv
 	match str(mv["effect"]):
 		"projectile": _eff_projectile(mv)
 		"cone": _eff_cone(mv)
@@ -873,6 +959,34 @@ func _run_effect(mv: Dictionary) -> void:
 		"sentry": _eff_sentry(mv)
 		"launch": _eff_launch(mv)
 		"phase": _eff_phase(mv)
+		# Pass 8
+		"polymorph": _eff_polymorph(mv)
+		"petrify": _eff_petrify(mv)
+		"banish": _eff_banish(mv)
+		"charm": _eff_charm(mv)
+		"taunt": _eff_taunt(mv)
+		"timestop": _eff_timestop(mv)
+		"gravflip": _eff_gravflip(mv)
+		"magnetize": _eff_magnetize(mv)
+		"grapple": _eff_grapple(mv)
+		"recall": _eff_recall(mv)
+		"phasewalk": _eff_phasewalk(mv)
+		"bridge": _eff_bridge(mv)
+		"telekinesis": _eff_telekinesis(mv)
+		"ricochet": _eff_ricochet(mv)
+		"swarm": _eff_swarm(mv)
+		"corpse_blast": _eff_corpse_blast(mv)
+		"static_field": _eff_static_field(mv)
+		"acid": _eff_acid(mv)
+		"mark": _eff_mark(mv)
+		"delayed_bomb": _eff_delayed_bomb(mv)
+		"sonic": _eff_sonic(mv)
+		"dome": _eff_dome(mv)
+		"overload": _eff_overload(mv)
+		"echo": _eff_echo(mv)
+		# Pass 9
+		"portal": _eff_portal(mv)
+		"quicksand": _eff_quicksand(mv)
 
 
 func _telegraph(mv: Dictionary, t: float) -> void:
@@ -973,12 +1087,18 @@ func _eff_projectile(mv: Dictionary) -> void:
 	var grav := float(mv.get("gravity", 0.0))
 	var home := float(mv.get("homing", 0.0))
 	var arc := bool(mv.get("arc", false))
+	# Fast straight shots get a subtle arc (still precise); lobbed/explicit-gravity shots don't.
+	var long_arc := grav <= 0.0 and not arc and speed >= LONG_RANGE_SPEED
+	if long_arc:
+		grav = LONG_RANGE_DROP
 	for i in range(count):
 		var d := dir
 		if count > 1:
 			d = dir.rotated(Vector3.UP, lerpf(-0.25, 0.25, float(i) / float(count - 1)))
 		if arc:
 			d = (d + Vector3.UP * 0.6).normalized()  # lob upward so gravity arcs it down
+		elif long_arc:
+			d = (d + Vector3.UP * 0.045).normalized()  # tiny lift so the arc crosses the aim line
 		var fb = packed.instantiate()
 		get_tree().current_scene.add_child(fb)
 		fb.global_position = global_position + d * 1.0 + Vector3.UP * 1.2
@@ -995,8 +1115,29 @@ func _eff_projectile(mv: Dictionary) -> void:
 		var dot := float(mv.get("dot", 0.0))
 		if dot > 0.0 and fb.has_method("set_dot"):
 			fb.set_dot(dot, float(mv.get("dot_dur", 4.0)))
-	# Muzzle flash.
-	_spawn_burst(global_position + dir * 1.0 + Vector3.UP * 1.2, 0.4, col, 4)
+	# Muzzle flash, with extra fire/lightning flair for those elements.
+	var muzzle := global_position + dir * 1.0 + Vector3.UP * 1.2
+	_spawn_burst(muzzle, 0.4, col, 4)
+	match str(mv.get("element", "")):
+		"fire": _fire_muzzle(muzzle, col)
+		"lightning": _lightning_muzzle(muzzle, dir, col)
+
+
+## Fire muzzle: rising embers with warm color jitter and a soft light pop.
+func _fire_muzzle(pos: Vector3, col: Color) -> void:
+	for i in range(7):
+		var ec := col.lerp(Color(1.0, 0.92, 0.45), randf() * 0.7)
+		var off := Vector3(randf_range(-0.3, 0.3), randf_range(-0.1, 0.4), randf_range(-0.3, 0.3))
+		_spawn_emitter(pos + off, ec, randf_range(0.07, 0.15), randf_range(0.4, 0.7), Vector3(randf_range(-0.5, 0.5), randf_range(1.0, 2.2), randf_range(-0.5, 0.5)))
+	_spawn_flash(pos, Color(1.0, 0.6, 0.2), 2.0, 2.2, 0.16)
+
+
+## Lightning muzzle: a few short crackling forks shooting forward, plus a flash.
+func _lightning_muzzle(pos: Vector3, dir: Vector3, col: Color) -> void:
+	for i in range(5):
+		var d := (dir + Vector3(randf_range(-0.6, 0.6), randf_range(-0.4, 0.4), randf_range(-0.6, 0.6))).normalized()
+		_bolt_segment(pos, pos + d * randf_range(0.6, 1.2), col)
+	_spawn_flash(pos, col, 2.5, 2.4, 0.14)
 
 
 # Fire: a burning rock falls onto the telegraphed point and explodes (AoE).
@@ -1096,52 +1237,56 @@ func _enemies_in_front(dir: Vector3) -> Array:
 ## Lightning STRIKES DOWN from high above the target (a vertical bolt), plus a
 ## brief flash of light at the impact point.
 func _spawn_lightning_strike(point: Vector3) -> void:
-	var top := point + Vector3.UP * 7.0
+	var top := point + Vector3.UP * 8.0
 	var bottom := point + Vector3.UP * 0.1
-	var col := Color(0.7, 0.85, 1.0)
-	# Jagged segmented bolt (zig-zags on the way down) instead of one straight bar.
-	var segs := 5
-	var prev := top
+	var col := Color(0.78, 0.9, 1.0)
+	# Jagged segmented bolt (zig-zags on the way down), tighter near the ground.
+	var segs := 8
+	var pts: Array = [top]
 	for i in range(segs):
 		var t := float(i + 1) / float(segs)
 		var nxt := top.lerp(bottom, t)
 		if i < segs - 1:
-			nxt += Vector3(randf_range(-0.45, 0.45), 0.0, randf_range(-0.45, 0.45))
-		_bolt_segment(prev, nxt, col)
-		prev = nxt
+			var j := 0.6 * (1.0 - t)
+			nxt += Vector3(randf_range(-j, j), 0.0, randf_range(-j, j))
+		pts.append(nxt)
+	for i in range(pts.size() - 1):
+		_bolt_segment(pts[i], pts[i + 1], col)
+		# Forked branches that split off the main channel and die out.
+		if i > 0 and i < pts.size() - 2 and randf() < 0.5:
+			var pa: Vector3 = pts[i]
+			var pb: Vector3 = pts[i + 1]
+			var bdir := (pb - pa).normalized() + Vector3(randf_range(-1, 1), randf_range(-0.6, -0.1), randf_range(-1, 1))
+			_bolt_segment(pa, pa + bdir.normalized() * randf_range(1.0, 2.0), col)
 
+	# Bright, fast-decaying impact flash.
 	var flash := OmniLight3D.new()
-	flash.light_color = Color(0.6, 0.8, 1.0)
-	flash.light_energy = 5.0
-	flash.omni_range = 6.0
+	flash.light_color = Color(0.7, 0.85, 1.0)
+	flash.light_energy = 8.0
+	flash.omni_range = 7.0
 	get_tree().current_scene.add_child(flash)
-	flash.global_position = point + Vector3.UP * 0.5
-	get_tree().create_timer(0.18).timeout.connect(flash.queue_free)
-	_spawn_ring(point + Vector3.UP * 0.1, 1.1, col, 8)
+	flash.global_position = point + Vector3.UP * 0.6
+	var ftw := flash.create_tween()
+	ftw.tween_property(flash, "light_energy", 0.0, 0.22)
+	ftw.tween_callback(flash.queue_free)
+	# Scorch shock ring + a spray of sparks kicking up from the impact.
+	_spawn_shockring(point, 1.4, col, 0.32)
+	for i in range(6):
+		var a := randf() * TAU
+		_spawn_emitter(point + Vector3(cos(a) * 0.3, 0.2, sin(a) * 0.3), col, 0.12, 0.35, Vector3(cos(a) * 1.2, randf_range(1.5, 3.0), sin(a) * 1.2))
 
 
-## One bright glowing segment of a lightning bolt between two points.
+## A lightning-bolt segment: an outer glow plus a white-hot inner core (layered).
 func _bolt_segment(a: Vector3, b: Vector3, col: Color) -> void:
 	var seg_len := a.distance_to(b)
 	if seg_len < 0.01:
 		return
-	var mi := MeshInstance3D.new()
-	var bm := BoxMesh.new()
-	bm.size = Vector3(0.12, 0.12, seg_len)
-	mi.mesh = bm
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.92, 0.96, 1.0)
-	mat.emission_enabled = true
-	mat.emission = col
-	mat.emission_energy_multiplier = 7.0
-	mi.material_override = mat
-	get_tree().current_scene.add_child(mi)
-	mi.global_position = (a + b) * 0.5
 	var up := Vector3.UP
 	if absf((b - a).normalized().y) > 0.99:
 		up = Vector3.FORWARD
-	mi.look_at(b, up)
-	get_tree().create_timer(0.18).timeout.connect(mi.queue_free)
+	var mid := (a + b) * 0.5
+	_beam_layer(mid, b, seg_len, 0.14, col, 6.0, up)                          # outer glow
+	_beam_layer(mid, b, seg_len, 0.05, col.lerp(Color(1, 1, 1), 0.7), 11.0, up)  # white core
 
 
 # Damages enemies along the dash PATH (each once) and leaves a flame trail, for the
@@ -1161,7 +1306,7 @@ func _update_trail(delta: float) -> void:
 
 # Wind/sky/fire: a quick dash burst. Optional fire "trail" or lightning "strike".
 func _eff_dash(mv: Dictionary) -> void:
-	var spd: float = float(mv.get("speed", 16.0))
+	var spd: float = float(mv.get("speed", 16.0)) * DASH_SPEED_MULT
 	var dir := Vector3(velocity.x, 0.0, velocity.z)
 	if dir.length() < 0.5:
 		dir = _aim_direction()
@@ -1609,6 +1754,17 @@ func _eff_buff(mv: Dictionary) -> void:
 			_power_time = dur
 			_speed_amt = float(mv.get("speed_amount", 3.0))
 			_speed_time = dur
+		"lifelink":
+			# Lifelink: steady heal-over-time (ticked in _update_buffs).
+			_hp_regen_amt = amt
+			_hp_regen_time = dur
+			_hp_regen_tick = 0.0
+		"ward":
+			# Spell Ward: damage reduction AND a melee counter window at once.
+			_shield_amt = clampf(amt, 0.0, 0.9)
+			_shield_time = dur
+			_counter_time = dur
+			_counter_dmg = _amp(8)
 	for i in range(10):
 		var a := TAU * float(i) / 10.0
 		_spawn_emitter(global_position + Vector3(cos(a) * 0.5, 0.2, sin(a) * 0.5), col, 0.16, 0.6, Vector3.UP * 1.6)
@@ -1724,21 +1880,58 @@ func _eff_zone(mv: Dictionary) -> void:
 	_spawn_hazard(center, radius, col, life, float(mv.get("height", 0.06)), opts)
 
 
-func _spawn_hazard(center: Vector3, radius: float, color: Color, life: float, height: float, opts: Dictionary) -> void:
-	var disc := MeshInstance3D.new()
-	var cyl := CylinderMesh.new()
-	cyl.top_radius = radius
-	cyl.bottom_radius = radius
-	cyl.height = 0.08
-	disc.mesh = cyl
+## A glowing disc mesh that conforms to the ground: concentric rings of vertices are
+## each raycast down to the terrain so the surface follows hills/slopes (built in
+## LOCAL space around `center` so it can still be scaled for growing hazards).
+func _make_ground_disc(center: Vector3, radius: float, color: Color, y_offset: float = 0.06) -> MeshInstance3D:
+	var rings := 3
+	var seg := 24
+	var verts: Array = []
+	for r in range(rings + 1):
+		var rr := radius * float(r) / float(rings)
+		var n := 1 if r == 0 else seg
+		var ring: Array = []
+		for s in range(n):
+			var a := TAU * float(s) / float(n)
+			var lx := cos(a) * rr
+			var lz := sin(a) * rr
+			var gy := _ground_y(Vector3(center.x + lx, center.y, center.z + lz))
+			ring.append(Vector3(lx, gy - center.y + y_offset, lz))
+		verts.append(ring)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var c0: Vector3 = verts[0][0]
+	for s in range(seg):
+		st.add_vertex(c0)
+		st.add_vertex(verts[1][(s + 1) % seg])
+		st.add_vertex(verts[1][s])
+	for r in range(1, rings):
+		for s in range(seg):
+			var p00: Vector3 = verts[r][s]
+			var p01: Vector3 = verts[r][(s + 1) % seg]
+			var p10: Vector3 = verts[r + 1][s]
+			var p11: Vector3 = verts[r + 1][(s + 1) % seg]
+			st.add_vertex(p00); st.add_vertex(p11); st.add_vertex(p10)
+			st.add_vertex(p00); st.add_vertex(p01); st.add_vertex(p11)
+	st.generate_normals()
+	var mi := MeshInstance3D.new()
+	mi.mesh = st.commit()
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color.darkened(0.2)
 	mat.emission_enabled = true
 	mat.emission = color
 	mat.emission_energy_multiplier = 1.2
-	disc.material_override = mat
-	get_tree().current_scene.add_child(disc)
-	disc.global_position = center + Vector3.UP * height
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED  # visible from above regardless of winding
+	mi.material_override = mat
+	get_tree().current_scene.add_child(mi)
+	mi.global_position = center
+	return mi
+
+
+func _spawn_hazard(center: Vector3, radius: float, color: Color, life: float, height: float, opts: Dictionary) -> void:
+	# A disc that DRAPES over the terrain (samples ground height across its area) so
+	# the hazard lies flat on slopes instead of clipping through / floating over them.
+	var disc := _make_ground_disc(center, radius, color, maxf(height, 0.05))
 	var grow := float(opts.get("grow", 0.0))
 	var interval := 0.5
 	var ticks := int(life / interval)
@@ -2432,7 +2625,7 @@ func _eff_launch(mv: Dictionary) -> void:
 
 # Wind/arcane: a dash with brief invulnerability (i-frames) — an escape/dodge tool.
 func _eff_phase(mv: Dictionary) -> void:
-	var spd := float(mv.get("speed", 30.0))
+	var spd := float(mv.get("speed", 30.0)) * DASH_SPEED_MULT
 	_invuln_time = float(mv.get("invuln", 0.5))
 	var dir := Vector3(velocity.x, 0.0, velocity.z)
 	if dir.length() < 0.5:
@@ -2444,6 +2637,597 @@ func _eff_phase(mv: Dictionary) -> void:
 	var col: Color = mv.get("color", ARCANE_COL)
 	for i in range(5):
 		get_tree().create_timer(float(i) * 0.05).timeout.connect(func(): _spawn_emitter(global_position + Vector3.UP * 0.9, col, 0.2, 0.4, Vector3.ZERO))
+
+
+# ============================================================================
+#  Pass 8 effects — control / mobility / utility / support / meta
+# ============================================================================
+
+# Control: turn enemies in an aimed area into harmless critters for a while.
+func _eff_polymorph(mv: Dictionary) -> void:
+	var radius := float(mv.get("radius", 3.5))
+	var dur := float(mv.get("duration", 4.0))
+	var col: Color = mv.get("color", ARCANE_COL)
+	var center := global_position + _aim_direction() * (radius * 0.6)
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) <= radius and e.has_method("apply_polymorph"):
+			e.apply_polymorph(dur)
+			_spawn_burst(e.global_position + Vector3.UP * 1.0, 0.5, col, 8)
+	_spawn_ring(center + Vector3.UP * 0.2, radius, col, 16)
+
+
+# Control: petrify — root enemies AND make them take extra damage (shatter setup).
+func _eff_petrify(mv: Dictionary) -> void:
+	var radius := float(mv.get("radius", 3.5))
+	var dur := float(mv.get("duration", 2.5))
+	var vuln := float(mv.get("vuln", 0.6))
+	var col: Color = mv.get("color", EARTH_COL)
+	var center := global_position + _aim_direction() * (radius * 0.6)
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) > radius:
+			continue
+		if e.has_method("apply_root"):
+			e.apply_root(dur)
+		if e.has_method("apply_vulnerable"):
+			e.apply_vulnerable(vuln, dur)
+		_spawn_emitter(e.global_position + Vector3.UP * 0.8, col, 0.3, 0.5)
+	_spawn_ring(center + Vector3.UP * 0.2, radius, col, 14)
+
+
+# Control: banish the nearest enemy in front out of the fight briefly.
+func _eff_banish(mv: Dictionary) -> void:
+	var dur := float(mv.get("duration", 3.0))
+	var col: Color = mv.get("color", ARCANE_COL)
+	var enemies := _enemies_in_front(_aim_direction_3d())
+	if enemies.is_empty():
+		return
+	var e = enemies[0]
+	if e.has_method("apply_banish"):
+		_spawn_burst(e.global_position + Vector3.UP * 1.0, 0.7, col, 12)
+		e.apply_banish(dur)
+
+
+# Control: charm the nearest enemy in front to fight its own kind.
+func _eff_charm(mv: Dictionary) -> void:
+	var dur := float(mv.get("duration", 5.0))
+	var col: Color = mv.get("color", SHADOW_COL)
+	var enemies := _enemies_in_front(_aim_direction_3d())
+	if enemies.is_empty():
+		return
+	var e = enemies[0]
+	if e.has_method("apply_charm"):
+		e.apply_charm(dur)
+		_spawn_emitter(e.global_position + Vector3.UP * 1.4, col, 0.3, 0.6, Vector3.UP * 0.5)
+		_spawn_ring(e.global_position + Vector3.UP * 0.3, 1.0, col, 10)
+
+
+# Control: deploy a decoy at the aimed spot that enemies attack instead of you.
+func _eff_taunt(mv: Dictionary) -> void:
+	var packed: PackedScene = load(DECOY_SCENE)
+	if packed == null:
+		return
+	var d = packed.instantiate()
+	d.setup(float(mv.get("life", 8.0)))
+	get_tree().current_scene.add_child(d)
+	var pos := global_position + _aim_direction() * 4.0
+	pos.y = _ground_y(pos)
+	d.global_position = pos
+	_spawn_ring(pos + Vector3.UP * 0.3, 1.2, mv.get("color", ARCANE_COL), 12)
+
+
+# Control: freeze all enemies in a radius in place (root) for a short window.
+func _eff_timestop(mv: Dictionary) -> void:
+	var radius := float(mv.get("radius", 5.5))
+	var dur := float(mv.get("duration", 2.5))
+	var col: Color = mv.get("color", Color(0.82, 0.9, 1.0))
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if global_position.distance_to(e.global_position) <= radius and e.has_method("apply_root"):
+			e.apply_root(dur)
+			_spawn_emitter(e.global_position + Vector3.UP * 1.0, col, 0.25, 0.5)
+	_spawn_ring(global_position + Vector3.UP * 0.3, radius, col, 20)
+	_spawn_flash(global_position + Vector3.UP * 0.6, col, 3.0, radius * 1.8, 0.3)
+
+
+# Control: suspend enemies in a zone helplessly in the air (root + repeated lift).
+func _eff_gravflip(mv: Dictionary) -> void:
+	var center := global_position + _aim_direction() * 5.0
+	center.y = _ground_y(center)
+	var radius := float(mv.get("radius", 5.0))
+	var dur := float(mv.get("duration", 2.5))
+	var dmg := _amp(int(mv.get("dmg", 3)))
+	var col: Color = mv.get("color", Color(0.6, 0.5, 0.92))
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) <= radius:
+			if e.has_method("apply_root"):
+				e.apply_root(dur)
+			if e.has_method("take_damage"):
+				e.take_damage(dmg)
+	var ticks := int(dur / 0.2)
+	for t in range(ticks):
+		get_tree().create_timer(float(t) * 0.2).timeout.connect(func(): _gravflip_tick(center, radius, col))
+	_spawn_ring(center + Vector3.UP * 0.2, radius, col, 18)
+
+
+func _gravflip_tick(center: Vector3, radius: float, col: Color) -> void:
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) <= radius and e.has_method("apply_knockback"):
+			e.apply_knockback(Vector3.UP * 6.0)
+	for i in range(3):
+		var a := randf() * TAU
+		_spawn_emitter(center + Vector3(cos(a) * radius * 0.6, randf_range(0.5, 2.5), sin(a) * radius * 0.6), col, 0.12, 0.5, Vector3.UP * 1.5)
+
+
+# Control: drag every enemy in a wide radius toward a point and leave them exposed.
+func _eff_magnetize(mv: Dictionary) -> void:
+	var center := global_position + _aim_direction() * 4.0
+	center.y = _ground_y(center) + 0.5
+	var radius := float(mv.get("radius", 9.0))
+	var force := float(mv.get("force", 12.0))
+	var ticks := int(mv.get("ticks", 6))
+	var vuln := float(mv.get("vuln", 0.4))
+	var col: Color = mv.get("color", Color(0.72, 0.55, 0.32))
+	var core := _make_orb(center, 0.4, col)
+	for t in range(ticks):
+		get_tree().create_timer(float(t) * 0.12).timeout.connect(func(): _pull_tick(center, radius, force, 0))
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) <= radius and e.has_method("apply_vulnerable"):
+			e.apply_vulnerable(vuln, 4.0)
+	get_tree().create_timer(float(ticks) * 0.12 + 0.1).timeout.connect(func(): _free_node(core))
+	_spawn_ring(center + Vector3.UP * 0.2, radius * 0.5, col, 14)
+
+
+# Mobility: fire a line, anchor to whatever it hits, and yank yourself there.
+func _eff_grapple(mv: Dictionary) -> void:
+	var rng := float(mv.get("range", 16.0))
+	var spd := float(mv.get("speed", 36.0))
+	var col: Color = mv.get("color", WIND_COL)
+	var origin := global_position + Vector3.UP * 1.0
+	var dir := _aim_direction_3d()
+	var space := get_world_3d().direct_space_state
+	var q := PhysicsRayQueryParameters3D.create(origin, origin + dir * rng)
+	q.exclude = [get_rid()]
+	var hit := space.intersect_ray(q)
+	var anchor := origin + dir * rng
+	if hit.has("position"):
+		anchor = hit["position"]
+	_spawn_beam(origin, anchor, col)
+	var pull := anchor - global_position
+	pull.y = clampf(pull.y, -2.0, 8.0)
+	if pull.length() > 1.0:
+		var v := pull.normalized() * spd
+		velocity.x = v.x
+		velocity.y = maxf(v.y, 4.0)
+		velocity.z = v.z
+	humanoid.play_roll()
+
+
+# Mobility: first cast drops a return marker; second cast teleports you back to it.
+func _eff_recall(mv: Dictionary) -> void:
+	var col: Color = mv.get("color", ARCANE_COL)
+	if _recall_point == null:
+		_recall_point = global_position
+		_spawn_ring(global_position + Vector3.UP * 0.2, 1.2, col, 14)
+		_spawn_burst(global_position + Vector3.UP * 1.0, 0.5, col, 6)
+	else:
+		var dest: Vector3 = _recall_point
+		_spawn_burst(global_position + Vector3.UP * 1.0, 0.6, col, 8)
+		global_position = dest + Vector3.UP * 0.1
+		velocity = Vector3.ZERO
+		_spawn_burst(global_position + Vector3.UP * 1.0, 0.6, col, 8)
+		_recall_point = null
+
+
+# Mobility: a longer dodge window of full invulnerability, with a ghosting trail.
+func _eff_phasewalk(mv: Dictionary) -> void:
+	var dur := float(mv.get("duration", 2.5))
+	_invuln_time = maxf(_invuln_time, dur)
+	var col: Color = mv.get("color", Color(0.72, 0.82, 1.0))
+	var ticks := int(dur / 0.15)
+	for t in range(ticks):
+		get_tree().create_timer(float(t) * 0.15).timeout.connect(func(): _spawn_emitter(global_position + Vector3.UP * 0.9, col, 0.18, 0.4, Vector3.ZERO))
+	_spawn_ring(global_position + Vector3.UP * 0.4, 1.2, col, 12)
+
+
+# Utility: conjure a short run of floating platforms ahead (cross gaps / get height).
+func _eff_bridge(mv: Dictionary) -> void:
+	var segs := int(mv.get("segments", 5))
+	var life := float(mv.get("life", 8.0))
+	var col: Color = mv.get("color", SKY_COL)
+	var dir := _aim_direction()
+	for i in range(segs):
+		var pos := global_position + dir * (1.5 + float(i) * 2.0)
+		pos.y = global_position.y - 0.5
+		_spawn_platform(pos, Vector3(2.2, 0.3, 2.2), col, life)
+
+
+func _spawn_platform(pos: Vector3, dims: Vector3, col: Color, life: float) -> void:
+	var body := StaticBody3D.new()
+	var mesh := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = dims
+	mesh.mesh = box
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = col
+	mat.emission_enabled = true
+	mat.emission = col * 0.5
+	mat.emission_energy_multiplier = 0.8
+	mesh.material_override = mat
+	var shape := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	bs.size = dims
+	shape.shape = bs
+	body.add_child(mesh)
+	body.add_child(shape)
+	body.transform = Transform3D(Basis.IDENTITY, pos)
+	get_tree().current_scene.add_child.call_deferred(body)
+	get_tree().create_timer(life).timeout.connect(body.queue_free)
+
+
+# Utility: telekinetically grab the nearest enemy in front and hurl it forward.
+func _eff_telekinesis(mv: Dictionary) -> void:
+	var rng := float(mv.get("range", 12.0))
+	var force := float(mv.get("force", 18.0))
+	var dmg := _amp(int(mv.get("dmg", 5)))
+	var col: Color = mv.get("color", ARCANE_COL)
+	var enemies := _enemies_in_front(_aim_direction_3d())
+	if enemies.is_empty():
+		return
+	var e = enemies[0]
+	if global_position.distance_to(e.global_position) > rng:
+		return
+	if e.has_method("take_damage"):
+		e.take_damage(dmg)
+	if e.has_method("apply_knockback"):
+		var dir := _aim_direction()
+		e.apply_knockback(dir * force + Vector3.UP * (force * 0.4))
+	_spawn_beam(global_position + Vector3.UP * 1.0, e.global_position + Vector3.UP * 1.0, col)
+
+
+# Damage: a bolt that bounces between enemies WITHOUT damage falloff (keeps energy).
+func _eff_ricochet(mv: Dictionary) -> void:
+	var bounces := int(mv.get("bounces", 5))
+	var rng := float(mv.get("range", 9.0))
+	var dmg := _amp(int(mv.get("dmg", 4)))
+	var col: Color = mv.get("color", LTNG_COL)
+	var cur = _nearest_enemy_within(global_position, LIGHTNING_RANGE, [])
+	if cur == null:
+		_spawn_beam(global_position + Vector3.UP * 1.0, global_position + _aim_direction_3d() * rng + Vector3.UP * 1.0, col)
+		return
+	var hit: Array = []
+	var prev := global_position + Vector3.UP * 1.0
+	for i in range(bounces):
+		if cur == null:
+			break
+		hit.append(cur)
+		if cur.has_method("take_damage"):
+			cur.take_damage(dmg)
+		_spawn_beam(prev, cur.global_position + Vector3.UP * 1.0, col)
+		_spawn_burst(cur.global_position + Vector3.UP * 0.8, 0.3, col, 3)
+		prev = cur.global_position + Vector3.UP * 1.0
+		cur = _nearest_enemy_within(prev, rng, hit)
+
+
+# Damage: several waves of small homing projectiles that seek nearby enemies.
+func _eff_swarm(mv: Dictionary) -> void:
+	var waves := int(mv.get("waves", 3))
+	var per := int(mv.get("per_wave", 4))
+	for w in range(waves):
+		var captured: Dictionary = mv
+		get_tree().create_timer(float(w) * 0.35).timeout.connect(func(): _swarm_wave(captured, per))
+
+
+func _swarm_wave(mv: Dictionary, per: int) -> void:
+	var packed: PackedScene = load(FIREBALL_SCENE)
+	if packed == null:
+		return
+	var col: Color = mv.get("color", NATURE_COL)
+	var dmg := _amp(int(mv.get("dmg", 2)))
+	var home := float(mv.get("homing", 6.0))
+	var base := _aim_direction_3d()
+	for i in range(per):
+		var d := base.rotated(Vector3.UP, randf_range(-0.7, 0.7))
+		var fb = packed.instantiate()
+		get_tree().current_scene.add_child(fb)
+		fb.global_position = global_position + Vector3.UP * 1.4 + d * 0.8
+		fb.setup(d.normalized(), dmg, 14.0, 0.45, col, false)
+		if fb.has_method("set_motion"):
+			fb.set_motion(0.0, home, true)
+
+
+# Damage: a necrotic blast that hits harder against weakened (low-HP) enemies.
+func _eff_corpse_blast(mv: Dictionary) -> void:
+	var radius := float(mv.get("radius", 4.5))
+	var dmg := _amp(int(mv.get("dmg", 5)))
+	var execute := float(mv.get("execute", 0.5))
+	var col: Color = mv.get("color", SHADOW_COL)
+	var center := global_position + _aim_direction() * 5.0
+	center.y = _ground_y(center) + 0.5
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) > radius:
+			continue
+		var total := dmg
+		if ("health" in e) and ("max_health" in e) and e.max_health > 0:
+			if float(e.health) / float(e.max_health) <= 0.5:
+				total = int(round(float(dmg) * (1.0 + execute)))
+		if e.has_method("take_damage"):
+			e.take_damage(total)
+	_spawn_flash(center, col, 4.0, radius * 1.8, 0.3)
+	_spawn_shockring(center, radius, col, 0.4)
+	_spawn_burst(center, radius * 0.5, col, 12)
+
+
+# Damage: a zone that shocks enemies inside — harder the faster they're moving.
+func _eff_static_field(mv: Dictionary) -> void:
+	var center := global_position + _aim_direction() * 5.0
+	center.y = _ground_y(center)
+	var radius := float(mv.get("radius", 4.5))
+	var life := float(mv.get("life", 6.0))
+	var dmg := int(mv.get("dmg", 2))
+	var col: Color = mv.get("color", LTNG_COL)
+	_spawn_hazard(center, radius, col, life, 0.05, {"color": col})  # visual disc
+	var ticks := int(life / 0.4)
+	for t in range(ticks):
+		get_tree().create_timer(float(t) * 0.4).timeout.connect(func(): _static_tick(center, radius, dmg, col))
+
+
+func _static_tick(center: Vector3, radius: float, dmg: int, col: Color) -> void:
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) > radius:
+			continue
+		var spd := 0.0
+		if "velocity" in e:
+			spd = Vector3(e.velocity.x, 0.0, e.velocity.z).length()
+		if e.has_method("take_damage"):
+			e.take_damage(_amp(dmg + int(spd)))  # faster movers take more
+		if spd > 0.5:
+			_spawn_lightning_strike(e.global_position)
+
+
+# Damage: a spray of acid pellets that also melts armor (vulnerability) on hit.
+func _eff_acid(mv: Dictionary) -> void:
+	var pellets := int(mv.get("pellets", 7))
+	var spread := float(mv.get("spread", 0.5))
+	var speed := float(mv.get("speed", 24.0))
+	var size := float(mv.get("size", 0.6))
+	var dmg := _amp(int(mv.get("dmg", 2)))
+	var col: Color = mv.get("color", Color(0.62, 0.85, 0.22))
+	var packed: PackedScene = load(FIREBALL_SCENE)
+	if packed == null:
+		return
+	var base := _aim_direction_3d()
+	for i in range(pellets):
+		var d := base.rotated(Vector3.UP, randf_range(-spread, spread))
+		var fb = packed.instantiate()
+		get_tree().current_scene.add_child(fb)
+		fb.global_position = global_position + base * 1.0 + Vector3.UP * 1.2
+		fb.setup(d.normalized(), dmg, speed, size, col, false)
+		fb.life = 0.5
+		var pdot := float(mv.get("dot", 0.0))
+		if pdot > 0.0 and fb.has_method("set_dot"):
+			fb.set_dot(pdot, 3.0)
+	var vuln := float(mv.get("vuln", 0.4))
+	var vdur := float(mv.get("vuln_dur", 4.0))
+	for e in _enemies_in_front(base):
+		if e.has_method("apply_vulnerable"):
+			e.apply_vulnerable(vuln, vdur)
+	_spawn_burst(global_position + base * 1.0 + Vector3.UP * 1.2, 0.5, col, 6)
+
+
+# Utility: mark the nearest enemy in front so it takes extra damage from everything.
+func _eff_mark(mv: Dictionary) -> void:
+	var rng := float(mv.get("range", 14.0))
+	var vuln := float(mv.get("vuln", 0.5))
+	var dur := float(mv.get("duration", 6.0))
+	var col: Color = mv.get("color", SHADOW_COL)
+	var enemies := _enemies_in_front(_aim_direction_3d())
+	if enemies.is_empty():
+		return
+	var e = enemies[0]
+	if global_position.distance_to(e.global_position) > rng:
+		return
+	if e.has_method("apply_vulnerable"):
+		e.apply_vulnerable(vuln, dur)
+	_spawn_marker(e, dur, col)
+
+
+# Damage: plant a charge that detonates on a fixed fuse (not proximity).
+func _eff_delayed_bomb(mv: Dictionary) -> void:
+	var pos := global_position + _aim_direction() * 4.0
+	pos.y = _ground_y(pos) + 0.2
+	var fuse := float(mv.get("fuse", 1.6))
+	var radius := float(mv.get("radius", 4.0))
+	var dmg := _amp(int(mv.get("dmg", 10)))
+	var col: Color = mv.get("color", FIRE_COL)
+	var bomb := _make_orb(pos, 0.3, col)
+	var tw := bomb.create_tween().set_loops()
+	tw.tween_property(bomb, "scale", Vector3.ONE * 1.4, 0.2)
+	tw.tween_property(bomb, "scale", Vector3.ONE * 0.8, 0.2)
+	get_tree().create_timer(fuse).timeout.connect(func(): _delayed_detonate(pos, radius, dmg, col, bomb))
+
+
+func _delayed_detonate(pos: Vector3, radius: float, dmg: int, col: Color, bomb: Node) -> void:
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if pos.distance_to(e.global_position) <= radius:
+			if e.has_method("take_damage"):
+				e.take_damage(dmg)
+			if e.has_method("apply_knockback"):
+				var fl := Vector3(e.global_position.x - pos.x, 0.0, e.global_position.z - pos.z)
+				e.apply_knockback((fl.normalized() if fl.length() > 0.01 else Vector3.FORWARD) * 9.0 + Vector3.UP * 3.0)
+	_spawn_flash(pos, col, 5.0, radius * 2.0, 0.25)
+	_spawn_shockring(pos, radius, col, 0.4)
+	_spawn_burst(pos + Vector3.UP * 0.3, radius * 0.5, col, 12)
+	_free_node(bomb)
+
+
+# Damage: a piercing sonic line that hits everything along it and disorients (fear).
+func _eff_sonic(mv: Dictionary) -> void:
+	var rng := float(mv.get("range", 36.0))
+	var width := float(mv.get("width", 1.8))
+	var dmg := _amp(int(mv.get("dmg", 5)))
+	var fear := float(mv.get("fear", 1.5))
+	var col: Color = mv.get("color", Color(0.82, 0.9, 1.0))
+	var origin := global_position + Vector3.UP * 1.2
+	var dir := _aim_direction_3d()
+	for e in get_tree().get_nodes_in_group("enemies"):
+		var to_e: Vector3 = e.global_position + Vector3.UP * 1.0 - origin
+		var along := to_e.dot(dir)
+		if along < 0.0 or along > rng:
+			continue
+		if (to_e - dir * along).length() <= width:
+			if e.has_method("take_damage"):
+				e.take_damage(dmg)
+			if fear > 0.0 and e.has_method("apply_fear"):
+				e.apply_fear(fear)
+	_spawn_beam(origin, origin + dir * rng, col)
+
+
+# Defense: raise a ring wall around yourself that enemies can't cross for a while.
+func _eff_dome(mv: Dictionary) -> void:
+	var radius := float(mv.get("radius", 3.2))
+	var life := float(mv.get("life", 6.0))
+	var col: Color = mv.get("color", Color(0.6, 0.8, 1.0))
+	var center := global_position
+	var body := StaticBody3D.new()
+	# Invisible ring of thin wall colliders keeps enemies out. (A solid sphere collider
+	# would trap the caster inside, so the blocking is a ring; the VISUAL is the bubble.)
+	var segs := 12
+	for i in range(segs):
+		var a := TAU * float(i) / float(segs)
+		var off := Vector3(cos(a) * radius, 1.0, sin(a) * radius)
+		var facing := Vector3(cos(a), 0.0, sin(a))
+		var shape := CollisionShape3D.new()
+		var bs := BoxShape3D.new()
+		bs.size = Vector3(0.5, 2.4, radius * 0.95)
+		shape.shape = bs
+		shape.transform = Transform3D(Basis.looking_at(facing, Vector3.UP), off)
+		body.add_child(shape)
+	# The visible dome: an actual translucent glowing sphere (upper half forms the dome
+	# above ground; the lower half is hidden under the terrain).
+	var bubble := MeshInstance3D.new()
+	var sphere := SphereMesh.new()
+	sphere.radius = radius
+	sphere.height = radius * 2.0
+	sphere.radial_segments = 28
+	sphere.rings = 16
+	bubble.mesh = sphere
+	bubble.position = Vector3.UP * 0.2
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(col.r, col.g, col.b, 0.16)
+	mat.emission_enabled = true
+	mat.emission = col
+	mat.emission_energy_multiplier = 0.9
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED  # see both faces of the shell
+	bubble.material_override = mat
+	body.add_child(bubble)
+	body.transform = Transform3D(Basis.IDENTITY, center)
+	get_tree().current_scene.add_child.call_deferred(body)
+	get_tree().create_timer(life).timeout.connect(body.queue_free)
+	_spawn_ring(center + Vector3.UP * 0.3, radius, col, 18)
+
+
+# Meta: spend health for a strong, short burst of bonus damage (blood magic).
+func _eff_overload(mv: Dictionary) -> void:
+	var hp_cost := int(mv.get("hp_cost", 20))
+	health = maxi(1, health - hp_cost)
+	DamageNumber.spawn(get_tree().current_scene, global_position + Vector3.UP * 1.1, hp_cost)
+	_power_amt = float(mv.get("amount", 1.0))
+	_power_time = float(mv.get("duration", 8.0))
+	var col: Color = mv.get("color", FIRE_COL)
+	for i in range(12):
+		var a := TAU * float(i) / 12.0
+		_spawn_emitter(global_position + Vector3(cos(a) * 0.6, 0.3, sin(a) * 0.6), col, 0.18, 0.6, Vector3.UP * 2.0)
+
+
+# Meta: instantly recast your previous spell for free.
+func _eff_echo(mv: Dictionary) -> void:
+	if _last_spell.is_empty():
+		return
+	var col: Color = mv.get("color", ARCANE_COL)
+	_spawn_burst(global_position + Vector3.UP * 1.0, 0.5, col, 6)
+	var captured: Dictionary = _last_spell
+	_run_effect(captured)
+
+
+# ============================================================================
+#  Pass 9 effects — portal + ramping quicksand
+# ============================================================================
+
+# Portal: first cast drops the entrance; second drops the linked exit. Walking into
+# either teleports to the other; both fade after `life`.
+func _eff_portal(mv: Dictionary) -> void:
+	var life := float(mv.get("life", 14.0))
+	var pos := global_position + _aim_direction() * 3.0
+	pos.y = _ground_y(pos)
+	if _portal_pending == null or not is_instance_valid(_portal_pending):
+		# Place the entrance (cool blue) and wait for the exit.
+		_portal_pending = _make_portal(pos, Color(0.45, 0.72, 1.0), life)
+		_spawn_ring(pos + Vector3.UP * 0.3, 1.2, Color(0.45, 0.72, 1.0), 12)
+	else:
+		# Place the exit (warm orange), link the pair, and restart both lifetimes.
+		var b = _make_portal(pos, Color(1.0, 0.6, 0.3), life)
+		var a = _portal_pending
+		a.link = b
+		b.link = a
+		a._life = life
+		b._life = life
+		_spawn_ring(pos + Vector3.UP * 0.3, 1.2, Color(1.0, 0.6, 0.3), 12)
+		_spawn_burst(pos + Vector3.UP * 0.5, 0.5, Color(1.0, 0.6, 0.3), 8)
+		_portal_pending = null
+
+
+func _make_portal(pos: Vector3, col: Color, life: float) -> Area3D:
+	var p := Area3D.new()
+	p.set_script(load("res://scenes/abilities/portal.gd"))
+	get_tree().current_scene.add_child(p)
+	p.global_position = pos + Vector3.UP * 0.08
+	p.setup(col, life)
+	return p
+
+
+# Quicksand: a terrain-hugging bog. The longer an enemy stands in it, the slower it
+# gets (ramping), recovering once it leaves. Light damage-over-time while sinking.
+func _eff_quicksand(mv: Dictionary) -> void:
+	var center := global_position + _aim_direction() * 5.0
+	center.y = _ground_y(center)
+	var radius := float(mv.get("radius", 4.0))
+	var life := float(mv.get("life", 7.0))
+	var max_slow := float(mv.get("max_slow", 0.25))  # floor speed factor (lower = slower)
+	var ramp := float(mv.get("ramp", 0.5))           # slow added per second of dwell
+	var dot := float(mv.get("dot", 0.0))
+	var col: Color = mv.get("color", Color(0.5, 0.42, 0.26))
+	var disc := _make_ground_disc(center, radius, col, 0.05)
+	var dwell := {}  # enemy -> seconds spent inside (shared across the ticks)
+	var interval := 0.25
+	var ticks := int(life / interval)
+	for t in range(ticks):
+		get_tree().create_timer(float(t) * interval).timeout.connect(func(): _quicksand_tick(center, radius, interval, ramp, max_slow, dot, col, dwell))
+	get_tree().create_timer(life).timeout.connect(disc.queue_free)
+
+
+func _quicksand_tick(center: Vector3, radius: float, interval: float, ramp: float, max_slow: float, dot: float, col: Color, dwell: Dictionary) -> void:
+	var present := {}
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if center.distance_to(e.global_position) > radius:
+			continue
+		var d := float(dwell.get(e, 0.0)) + interval
+		dwell[e] = d
+		present[e] = true
+		var factor := clampf(1.0 - ramp * d, max_slow, 1.0)  # ramps toward max_slow
+		if e.has_method("apply_slow"):
+			e.apply_slow(factor, 0.5)  # short refresh so it recovers after leaving
+		if dot > 0.0 and e.has_method("apply_dot"):
+			e.apply_dot(dot, 0.5)
+	# Anyone who stepped out resets their sink progress.
+	for e in dwell.keys():
+		if not present.has(e):
+			dwell.erase(e)
+	for i in range(3):
+		var a := randf() * TAU
+		var rr := randf() * radius
+		var p := Vector3(center.x + cos(a) * rr, 0.0, center.z + sin(a) * rr)
+		p.y = _ground_y(p) + 0.1
+		_spawn_emitter(p, col, 0.12, 0.5, Vector3.UP * 0.5)
 
 
 # --- Ability VFX (brief code-only emissive primitives) ---
@@ -2547,6 +3331,8 @@ func _respawn() -> void:
 	_stealth_time = 0.0
 	_aura_time = 0.0
 	_invuln_time = 0.0
+	_hp_regen_time = 0.0
+	_recall_point = null
 	global_position = Vector3(0.0, 4.0, 0.0)
 	velocity = Vector3.ZERO
 

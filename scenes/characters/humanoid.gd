@@ -189,6 +189,9 @@ func _build_hair() -> void:
 	var rad := 0.17                     # head radius
 	var spiky := hair_style == 2
 	var longhair := hair_style == 1
+	# Solid scalp cap so the head is never visible THROUGH the strands. Strands below
+	# add texture on top of this; spiky style still spikes, just over a covered scalp.
+	_build_hair_cap(hc, rad)
 	# Scalp coverage: latitude rings from the crown down past the ears; each ring's
 	# strand count scales with its circumference so coverage stays even.
 	var theta_max := deg_to_rad(70.0) if spiky else deg_to_rad(118.0)
@@ -214,6 +217,47 @@ func _build_hair() -> void:
 			var a := deg_to_rad(lerpf(58.0, 302.0, float(k) / float(lock_n - 1)))
 			var dir := Vector3(sin(a) * sin(ltheta), cos(ltheta), -cos(a) * sin(ltheta))
 			_add_strand(hc, rad, dir, false, true)
+
+
+## A solid dome of hair covering the scalp (crown, back and sides, leaving the lower
+## front bare as a hairline). This seals the head so it can't be seen between strands.
+func _build_hair_cap(hc: Vector3, rad: float) -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var rings := 8
+	var segs := 18
+	var theta_max := deg_to_rad(122.0)
+	var grid: Array = []
+	for ri in range(rings + 1):
+		var theta := lerpf(0.0, theta_max, float(ri) / float(rings))
+		var row: Array = []
+		for si in range(segs + 1):
+			var a := TAU * float(si) / float(segs)
+			var dir := Vector3(sin(a) * sin(theta), cos(theta), -cos(a) * sin(theta))
+			if dir.z < -0.05 and dir.y < 0.52:
+				row.append(null)   # leave the face bare (hairline)
+			else:
+				row.append(hc + dir * (rad * 1.05))
+		grid.append(row)
+	for ri in range(rings):
+		for si in range(segs):
+			var p00 = grid[ri][si]
+			var p01 = grid[ri][si + 1]
+			var p10 = grid[ri + 1][si]
+			var p11 = grid[ri + 1][si + 1]
+			if p00 == null or p01 == null or p10 == null or p11 == null:
+				continue
+			st.add_vertex(p00); st.add_vertex(p10); st.add_vertex(p11)
+			st.add_vertex(p00); st.add_vertex(p11); st.add_vertex(p01)
+	st.generate_normals()
+	var mi := MeshInstance3D.new()
+	mi.mesh = st.commit()
+	var m := StandardMaterial3D.new()
+	m.albedo_color = hair_color
+	m.roughness = 0.62
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mi.material_override = m
+	hair_node.add_child(mi)
 
 
 ## One hair strand: a thin tapered/elongated piece sitting on the scalp at surface

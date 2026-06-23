@@ -32,7 +32,7 @@ extends Control
 @onready var atk_val: Label = $Panel/Margin/VBox/Stats/AtkRow/Val
 
 @onready var search: LineEdit = $Panel/Margin/VBox/Search
-@onready var carried_list: VBoxContainer = $Panel/Margin/VBox/CarriedList
+@onready var carried_list: VBoxContainer = $Panel/Margin/VBox/CarriedScroll/CarriedList
 
 const EMPTY_COLOR := Color(0.78, 0.78, 0.8)
 const ITEM_ICON := preload("res://scenes/ui/item_icon.tscn")
@@ -220,4 +220,12 @@ func _build_theme() -> Theme:
 	sb.set_corner_radius_all(8)
 	sb.set_content_margin_all(8)
 	t.set_stylebox("panel", "PanelContainer", sb)
+	# Light, bordered search field so it reads as an input on the white panel.
+	var le := StyleBoxFlat.new()
+	le.bg_color = Color(1.0, 1.0, 1.0)
+	le.border_color = Color(0.7, 0.7, 0.75)
+	le.set_border_width_all(1)
+	le.set_corner_radius_all(5)
+	le.set_content_margin_all(6)
+	t.set_stylebox("normal", "LineEdit", le)
 	return t

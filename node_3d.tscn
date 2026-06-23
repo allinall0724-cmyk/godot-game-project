@@ -32,10 +32,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 [node name="Enemies" type="Node3D" parent="."]
 
 [node name="Goblin" parent="Enemies" instance=ExtResource("5_enemy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 2, 4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55, 18, 40)
 
 [node name="Orc" parent="Enemies" instance=ExtResource("5_enemy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 2, 2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 18, 30)
 max_health = 12
 wander_speed = 0.9
 chase_speed = 2.0
@@ -58,25 +58,25 @@ tusk_size = 1.9
 bulk = 1.45
 
 [node name="Slime" parent="Enemies" instance=ExtResource("18_slime")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2, -3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 18, -55)
 
 [node name="Slime2" parent="Enemies" instance=ExtResource("18_slime")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 2, -4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 18, -45)
 
 [node name="Humanoid" parent="Enemies/Slime2" index="0"]
 slime_color = Color(0.35, 0.55, 1, 1)
 
 [node name="Wolf" parent="Enemies" instance=ExtResource("19_wolf")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2, 5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70, 18, -20)
 
 [node name="Wolf2" parent="Enemies" instance=ExtResource("19_wolf")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 2, 2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 18, 25)
 
 [node name="Humanoid" parent="Enemies/Wolf2" index="0"]
 fur_color = Color(0.55, 0.56, 0.6, 1)
 
 [node name="Skeleton" parent="Enemies" instance=ExtResource("20_skel")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 2, 6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -75, 18, 10)
 
 [node name="HubProps" type="Node3D" parent="."]
 

@@ -1,7 +1,6 @@
 extends Node3D
-## Spins (and gently bobs) its child "spark" primitives around their parent so a
-## weapon/orb has small orbiting particles (e.g. the staff's arcane orb).
-## Code-only, no GPU particles.
+## Spins (and gently bobs) its child "spark" primitives around their parent so the
+## staff's arcane orb has small orbiting particles. Code-only, no GPU particles.
 
 @export var spin_speed := 3.5
 @export var bob_amount := 0.04
