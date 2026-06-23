@@ -16,7 +16,7 @@ extends Node3D
 @export var hair_style := 0:
 	set(value):
 		hair_style = value
-		if is_node_ready():
+		if is_node_ready() and not _rebuilding:
 			_build_hair()
 ## Race/feature flags (built procedurally) so one model covers many character types.
 @export var ear_style := 0:        # 0 = round, 1 = pointed (goblins / orcs / elves)
@@ -37,6 +37,15 @@ extends Node3D
 		hat_style = value
 		if is_node_ready():
 			_build_hat()
+## Body silhouette (cosmetic only): 0 = default/broad build, 1 = feminine
+## (slimmer waist + shoulders, a defined bust, a little more hip). Stacks on top
+## of `bulk`, so an orc/troll can still be set bulky regardless.
+@export var body_type := 0:
+	set(value):
+		body_type = value
+		if is_node_ready() and not _rebuilding:
+			_apply_body()
+			_build_bust()
 
 const WALK_FREQ := 9.0
 const WALK_MAX_AMP := 0.7
@@ -56,6 +65,10 @@ const ATTACK_ANIM_TIME := 0.28
 
 const ROLL_DUR := 0.45
 
+# True while apply_appearance() is mid-assignment, so the property setters above
+# don't rebuild piecemeal — we do one clean _rebuild_appearance() at the end.
+var _rebuilding := false
+
 var move_speed := 0.0
 var _phase := 0.0
 var _attack_time := 0.0
@@ -65,26 +78,69 @@ var _roll_time := 0.0
 
 
 func _ready() -> void:
+	# Armor hidden until equipped.
+	helmet_node.visible = false
+	chest_node.visible = false
+	greave_l.visible = false
+	greave_r.visible = false
+	_rebuild_appearance()
+
+
+## (Re)build the whole look from the current color/style/body fields. Safe to call
+## again at runtime — every step clears and rebuilds, so the character-select
+## screen can restyle a live character via apply_appearance().
+func _rebuild_appearance() -> void:
+	_repaint_body()
+	_build_neck()
+	_build_hair()
+	_build_hands()
+	_build_features()
+	_build_hat()
+	_apply_body()
+	_build_bust()
+
+
+## Apply a full appearance preset (see CharacterPresets). Any omitted key keeps the
+## current value, so partial tweaks work too.
+func apply_appearance(p: Dictionary) -> void:
+	_rebuilding = true
+	skin_color = p.get("skin_color", skin_color)
+	tunic_color = p.get("tunic_color", tunic_color)
+	shorts_color = p.get("shorts_color", shorts_color)
+	legs_color = p.get("legs_color", legs_color)
+	boot_color = p.get("boot_color", boot_color)
+	hair_color = p.get("hair_color", hair_color)
+	hair_style = p.get("hair_style", hair_style)
+	body_type = p.get("body_type", body_type)
+	_rebuilding = false
+	_rebuild_appearance()
+
+
+func _repaint_body() -> void:
 	_paint("Torso", tunic_color)
 	_paint("Shorts", shorts_color)
 	_paint("Head", skin_color)
-	_build_hair()
 	_paint("ArmL_Pivot/ArmL", skin_color)
 	_paint("ArmR_Pivot/ArmR", skin_color)
 	_paint("LegL_Pivot/LegL", legs_color)
 	_paint("LegR_Pivot/LegR", legs_color)
 	_paint("LegL_Pivot/BootL", boot_color)
 	_paint("LegR_Pivot/BootR", boot_color)
-	# Armor hidden until equipped.
-	helmet_node.visible = false
-	chest_node.visible = false
-	greave_l.visible = false
-	greave_r.visible = false
-	# Procedural extras (hands, ears/tusks, hat, bulk).
-	_apply_bulk()
-	_build_hands()
-	_build_features()
-	_build_hat()
+
+
+## A short neck so the head doesn't float above the shoulders (used by everyone).
+func _build_neck() -> void:
+	var old = get_node_or_null("Neck")
+	if old != null:
+		old.free()  # immediate: re-adding "Neck" same frame must not name-collide
+	var n := MeshInstance3D.new()
+	n.name = "Neck"
+	n.mesh = _cyl(0.075, 0.16)
+	n.position = Vector3(0.0, 0.49, 0.0)
+	var m := StandardMaterial3D.new()
+	m.albedo_color = skin_color
+	n.material_override = m
+	add_child(n)
 
 
 ## Build hair from many small tufts (messy throughout, not a solid block). The
@@ -152,7 +208,7 @@ func _build_hands() -> void:
 	for pivot in [arm_l, arm_r]:
 		var old = pivot.get_node_or_null("HandMesh")
 		if old != null:
-			old.queue_free()
+			old.free()  # immediate: avoid same-frame "HandMesh" name collision
 		var h := MeshInstance3D.new()
 		h.name = "HandMesh"
 		var bm := BoxMesh.new()
@@ -173,7 +229,7 @@ func _build_features() -> void:
 	for nm in ["EarL", "EarR", "TuskL", "TuskR"]:
 		var old = head.get_node_or_null(nm)
 		if old != null:
-			old.queue_free()
+			old.free()  # immediate: avoid same-frame name collision on rebuild
 	if ear_style == 1:
 		var er := 0.055 * ear_size
 		var eh := 0.22 * ear_size
@@ -203,19 +259,70 @@ func _make_cone(nm: String, base_r: float, h: float, col: Color, pos: Vector3, r
 	return m
 
 
-## Widen the torso/arms for bulky races (orc/troll) or slim them (goblin/skeleton).
-func _apply_bulk() -> void:
-	if is_equal_approx(bulk, 1.0):
+## Base pivot offsets straight from humanoid.tscn (so scaling is idempotent —
+## we always re-derive from these, never multiply the live value).
+const _ARM_BASE_X := 0.31
+const _LEG_BASE_X := 0.12
+
+
+## Shape the silhouette from `bulk` (race width) AND `body_type` (cosmetic build).
+## Sets absolute scales/offsets every call, so it's safe to re-run when the player
+## picks a different character on the select screen.
+func _apply_body() -> void:
+	var torso_w := bulk
+	var depth := 1.0
+	var shoulder := bulk
+	var hip := bulk
+	var arm_w := clampf(bulk, 0.8, 1.4)
+	var leg_w := 1.0
+	if body_type == 1:
+		# Feminine: trimmer waist/shoulders/limbs, slightly wider hips.
+		torso_w *= 0.86
+		depth *= 0.94
+		shoulder *= 0.80
+		hip *= 1.05
+		arm_w *= 0.84
+		leg_w = 0.9
+	var torso := get_node_or_null("Torso") as Node3D
+	if torso != null:
+		torso.scale = Vector3(torso_w, 1.0, depth)
+	var belt := get_node_or_null("Belt") as Node3D
+	if belt != null:
+		belt.scale = Vector3(maxf(torso_w, hip), 1.0, depth)
+	var shorts := get_node_or_null("Shorts") as Node3D
+	if shorts != null:
+		shorts.scale = Vector3(hip, 1.0, depth)
+	arm_l.position.x = -_ARM_BASE_X * shoulder
+	arm_r.position.x = _ARM_BASE_X * shoulder
+	arm_l.scale = Vector3(arm_w, 1.0, arm_w)
+	arm_r.scale = Vector3(arm_w, 1.0, arm_w)
+	leg_l.position.x = -_LEG_BASE_X * hip
+	leg_r.position.x = _LEG_BASE_X * hip
+	leg_l.scale = Vector3(leg_w, 1.0, leg_w)
+	leg_r.scale = Vector3(leg_w, 1.0, leg_w)
+
+
+## Defined bust for feminine builds (two soft forms on the upper chest). Hidden
+## when chest armor is worn (apply_equipment toggles it). Painted with tunic_color.
+func _build_bust() -> void:
+	var old = get_node_or_null("Bust")
+	if old != null:
+		old.free()  # immediate: avoid same-frame "Bust" name collision on rebuild
+	if body_type != 1:
 		return
-	for p in ["Torso", "Shorts", "Belt"]:
-		var n := get_node_or_null(p) as Node3D
-		if n != null:
-			n.scale = Vector3(bulk, 1.0, bulk)
-	var aw := clampf(bulk, 0.8, 1.4)
-	arm_l.position.x *= bulk
-	arm_r.position.x *= bulk
-	arm_l.scale = Vector3(aw, 1.0, aw)
-	arm_r.scale = Vector3(aw, 1.0, aw)
+	var bust := Node3D.new()
+	bust.name = "Bust"
+	add_child(bust)
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = tunic_color
+	mat.roughness = 0.9
+	for sx in [-1.0, 1.0]:
+		var b := MeshInstance3D.new()
+		b.mesh = _sphere(0.085)
+		b.position = Vector3(sx * 0.1, 0.34, -0.10)
+		b.scale = Vector3(1.0, 0.82, 0.9)
+		b.material_override = mat
+		bust.add_child(b)
 
 
 ## A simple straw hat for villagers (brim + cone). Hides hair while worn.
@@ -225,7 +332,7 @@ func _build_hat() -> void:
 		return
 	var old = head.get_node_or_null("Hat")
 	if old != null:
-		old.queue_free()
+		old.free()  # immediate: avoid same-frame "Hat" name collision on rebuild
 	hair_node.visible = hat_style != 1
 	if hat_style != 1:
 		return
@@ -303,6 +410,10 @@ func apply_equipment(equipment: Dictionary) -> void:
 	chest_node.visible = chest != null
 	if chest != null:
 		_build_chest(str(chest.get("model", "leather")), chest.get("color", ARMOR_DEFAULT))
+	# A feminine build's bust is covered while chest armor is worn.
+	var bust := get_node_or_null("Bust")
+	if bust != null:
+		bust.visible = chest == null
 
 	# Legs (the old single-mesh greaves are replaced by per-leg built containers).
 	greave_l.visible = false
