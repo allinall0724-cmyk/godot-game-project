@@ -92,6 +92,7 @@ func _ready() -> void:
 func _rebuild_appearance() -> void:
 	_repaint_body()
 	_build_neck()
+	_build_face()
 	_build_hair()
 	_build_hands()
 	_build_features()
@@ -126,6 +127,38 @@ func _repaint_body() -> void:
 	_paint("LegR_Pivot/LegR", legs_color)
 	_paint("LegL_Pivot/BootL", boot_color)
 	_paint("LegR_Pivot/BootR", boot_color)
+
+
+## Extra face detail so heads aren't just two eyes + a mouth: a small nose
+## (skin-toned) and a pair of brows (hair-toned). Rebuilt with the rest of the
+## appearance; freed immediately so a same-frame restyle can't duplicate them.
+func _build_face() -> void:
+	var head := get_node_or_null("Head") as Node3D
+	if head == null:
+		return
+	for nm in ["Nose", "BrowL", "BrowR"]:
+		var old = head.get_node_or_null(nm)
+		if old != null:
+			old.free()
+	var nose := MeshInstance3D.new()
+	nose.name = "Nose"
+	nose.mesh = _box(Vector3(0.05, 0.10, 0.06))
+	nose.position = Vector3(0.0, -0.02, -0.16)
+	var nmat := StandardMaterial3D.new()
+	nmat.albedo_color = skin_color.darkened(0.10)
+	nmat.roughness = 0.9
+	nose.material_override = nmat
+	head.add_child(nose)
+	var bmat := StandardMaterial3D.new()
+	bmat.albedo_color = hair_color.darkened(0.05)
+	bmat.roughness = 0.85
+	for sx in [-1.0, 1.0]:
+		var brow := MeshInstance3D.new()
+		brow.name = "BrowL" if sx < 0.0 else "BrowR"
+		brow.mesh = _box(Vector3(0.075, 0.02, 0.03))
+		brow.position = Vector3(sx * 0.06, 0.075, -0.155)
+		brow.material_override = bmat
+		head.add_child(brow)
 
 
 ## A short neck so the head doesn't float above the shoulders (used by everyone).
