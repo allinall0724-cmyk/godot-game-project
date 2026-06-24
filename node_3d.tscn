@@ -144,13 +144,13 @@ loot_set = "armory2"
 [node name="Village" type="Node3D" parent="HubProps"]
 
 [node name="House1" parent="HubProps/Village" instance=ExtResource("9_house")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.1, -6)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -10, 0, -6)
 
 [node name="House2" parent="HubProps/Village" instance=ExtResource("9_house")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.1, -11)
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -6, 0, -11)
 
 [node name="House3" parent="HubProps/Village" instance=ExtResource("9_house")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 0.1, -11)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 0, -11)
 
 [node name="Villagers" type="Node3D" parent="HubProps/Village"]
 
