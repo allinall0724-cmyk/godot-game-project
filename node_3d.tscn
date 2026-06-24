@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3 uid="uid://chwob76l3h8ax"]
+[gd_scene load_steps=22 format=3 uid="uid://chwob76l3h8ax"]
 
 [ext_resource type="PackedScene" uid="uid://bfx7t2cqq6i8" path="res://scenes/world/world.tscn" id="1_world"]
 [ext_resource type="Script" path="res://main.gd" id="2_main"]
@@ -20,6 +20,7 @@
 [ext_resource type="PackedScene" uid="uid://dn0slime00001" path="res://scenes/enemies/slime.tscn" id="18_slime"]
 [ext_resource type="PackedScene" uid="uid://dn0wolf00001" path="res://scenes/enemies/wolf.tscn" id="19_wolf"]
 [ext_resource type="PackedScene" uid="uid://dn0skeleton01" path="res://scenes/enemies/skeleton.tscn" id="20_skel"]
+[ext_resource type="Script" path="res://scenes/props/village_decor.gd" id="21_decor"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("2_main")
@@ -142,6 +143,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.1, 4)
 loot_set = "armory2"
 
 [node name="Village" type="Node3D" parent="HubProps"]
+
+[node name="VillageDecor" type="Node3D" parent="HubProps/Village"]
+script = ExtResource("21_decor")
 
 [node name="House1" parent="HubProps/Village" instance=ExtResource("9_house")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -10, 0, -6)
