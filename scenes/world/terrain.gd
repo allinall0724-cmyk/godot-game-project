@@ -66,6 +66,7 @@ var _caves: Array[Dictionary] = []
 
 
 func _ready() -> void:
+	add_to_group("terrain")   # so the spawn director can sample ground height
 	_noise = FastNoiseLite.new()
 	_noise.seed = TERRAIN_SEED
 	_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX

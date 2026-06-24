@@ -2808,13 +2808,31 @@ func take_damage(amount: int) -> void:
 		_respawn()
 
 
-## Called by enemies on death (enemy._die). Feeds Soul Harvest if it's active.
+## Called by enemies on death (enemy._die). Feeds Soul Harvest if it's active,
+## and tracks kills + coin drops for the quest/trade economy.
 func on_enemy_killed(_pos: Vector3) -> void:
+	kills += 1
+	add_coins(randi_range(2, 5))
 	if _harvest_time > 0.0:
 		heal(12)
 		# Stack a short empower that refreshes with each kill during the harvest.
 		_power_amt = minf(1.5, (_power_amt if _power_time > 0.0 else 0.0) + 0.15)
 		_power_time = 5.0
+
+
+# --- Currency / progress (used by villager quests + trading) ---
+var coins := 0
+var kills := 0
+
+func add_coins(n: int) -> void:
+	coins = maxi(0, coins + n)
+
+## Spend coins if affordable; returns true on success.
+func spend_coins(n: int) -> bool:
+	if coins >= n:
+		coins -= n
+		return true
+	return false
 
 
 func _respawn() -> void:

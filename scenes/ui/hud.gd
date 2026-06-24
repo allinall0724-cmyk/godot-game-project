@@ -11,6 +11,8 @@ extends Control
 var xp_bar: ProgressBar
 var xp_label: Label
 var banner: Label
+var coin_label: Label
+var time_label: Label
 var _last_level := 1
 var _banner_time := 0.0
 
@@ -20,6 +22,35 @@ func _ready() -> void:
 	_style_bar(stamina_bar, Color(0.92, 0.78, 0.2))
 	_build_xp_ui()
 	_build_banner()
+	_build_status()
+
+
+## Coins + day/night readout, top-right corner.
+func _build_status() -> void:
+	coin_label = Label.new()
+	coin_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	coin_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	coin_label.anchor_left = 1.0
+	coin_label.anchor_right = 1.0
+	coin_label.offset_left = -180.0
+	coin_label.offset_top = 212.0   # below the minimap
+	coin_label.offset_right = -12.0
+	coin_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	coin_label.add_theme_font_size_override("font_size", 18)
+	coin_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	add_child(coin_label)
+
+	time_label = Label.new()
+	time_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	time_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	time_label.anchor_left = 1.0
+	time_label.anchor_right = 1.0
+	time_label.offset_left = -180.0
+	time_label.offset_top = 236.0   # below the coins
+	time_label.offset_right = -12.0
+	time_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	time_label.add_theme_font_size_override("font_size", 15)
+	add_child(time_label)
 
 
 ## Give a ProgressBar a clean dark rounded track with a colored fill.
@@ -91,6 +122,17 @@ func _process(delta: float) -> void:
 	xp_bar.max_value = float(maxi(need, 1))
 	xp_bar.value = float(player.xp)
 	xp_label.text = "Lv %d    XP %d / %d" % [lvl, player.xp, need]
+
+	# Coins + day/night readout.
+	coin_label.text = "Coins: %d" % int(player.coins)
+	var world = get_tree().get_first_node_in_group("world")
+	if world != null and world.has_method("is_night"):
+		if world.is_night():
+			time_label.text = "🌙 Night"
+			time_label.add_theme_color_override("font_color", Color(0.6, 0.7, 1.0))
+		else:
+			time_label.text = "☀ Day"
+			time_label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.7))
 
 	# Detect a level-up and flash the banner.
 	if lvl > _last_level:

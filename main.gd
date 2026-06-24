@@ -17,6 +17,7 @@ extends Node3D
 const SAVE_PATH := "user://save.cfg"
 
 var piloting := false
+var _trade_ui = null
 
 
 func _ready() -> void:
@@ -90,8 +91,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		_on_interact()
 
 
-## E priority: exit ship if piloting > board ship if near it > open a nearby chest.
+## E priority: (ignored while trading) exit/board ship > talk to a villager > open
+## a nearby chest.
 func _on_interact() -> void:
+	if _trade_ui != null and _trade_ui.visible:
+		return
 	if ship != null:
 		if piloting:
 			_toggle_board()
@@ -99,9 +103,42 @@ func _on_interact() -> void:
 		if ship.player_in_range:
 			_toggle_board()
 			return
+	var npc = _nearest_villager()
+	if npc != null:
+		_open_trade(npc)
+		return
 	var chest = _nearest_unopened_chest()
 	if chest != null:
 		chest.open(player)
+
+
+## Nearest villager within talking distance, or null.
+func _nearest_villager():
+	var best = null
+	var best_d := 3.5
+	for v in get_tree().get_nodes_in_group("villagers"):
+		var d: float = player.global_position.distance_to(v.global_position)
+		if d < best_d:
+			best_d = d
+			best = v
+	return best
+
+
+## Open the quest/trade dialogue with a villager; freezes the player + frees the
+## cursor until the dialogue is closed.
+func _open_trade(npc) -> void:
+	if _trade_ui == null:
+		_trade_ui = preload("res://scenes/ui/trade_ui.gd").new()
+		get_node("UI").add_child(_trade_ui)
+		_trade_ui.closed.connect(_on_trade_closed)
+	player.set_active(false)
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	_trade_ui.open(npc, player)
+
+
+func _on_trade_closed() -> void:
+	player.set_active(true)
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 
 func _nearest_unopened_chest():
