@@ -1,0 +1,24 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/characters/special_npc.gd" id="1_sn"]
+[ext_resource type="PackedScene" uid="uid://dn0humanoid01" path="res://scenes/characters/humanoid.tscn" id="2_humanoid"]
+
+[sub_resource type="CapsuleShape3D" id="3_snshape"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="SphereShape3D" id="4_snarea"]
+radius = 2.8
+
+[node name="SpecialNPC" type="CharacterBody3D"]
+script = ExtResource("1_sn")
+
+[node name="Humanoid" parent="." instance=ExtResource("2_humanoid")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("3_snshape")
+
+[node name="InteractArea" type="Area3D" parent="."]
+
+[node name="AreaShape" type="CollisionShape3D" parent="InteractArea"]
+shape = SubResource("4_snarea")

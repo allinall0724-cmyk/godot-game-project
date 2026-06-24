@@ -16,6 +16,7 @@ extends CharacterBody3D
 @export var attack_damage := 8
 @export var attack_cooldown := 1.2 # seconds between hits
 @export var xp_reward := 6          # XP granted to the player on death (orcs override higher)
+@export var enemy_type := "goblin"  # used by quests to count kills (orc instance overrides)
 
 const GRAVITY := 22.0
 
@@ -108,6 +109,10 @@ func _die() -> void:
 	var player = get_tree().get_first_node_in_group("local_player")
 	if player != null and player.has_method("gain_xp"):
 		player.gain_xp(xp_reward)
+	# Let active quests count this kill.
+	var quests := get_node_or_null("/root/Quests")
+	if quests != null:
+		quests.notify_enemy_killed(enemy_type)
 	queue_free()
 
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3 uid="uid://chwob76l3h8ax"]
+[gd_scene load_steps=26 format=3 uid="uid://chwob76l3h8ax"]
 
 [ext_resource type="PackedScene" uid="uid://bfx7t2cqq6i8" path="res://scenes/world/world.tscn" id="1_world"]
 [ext_resource type="Script" path="res://main.gd" id="2_main"]
@@ -20,11 +20,19 @@
 [ext_resource type="PackedScene" uid="uid://dn0slime00001" path="res://scenes/enemies/slime.tscn" id="18_slime"]
 [ext_resource type="PackedScene" uid="uid://dn0wolf00001" path="res://scenes/enemies/wolf.tscn" id="19_wolf"]
 [ext_resource type="PackedScene" uid="uid://dn0skeleton01" path="res://scenes/enemies/skeleton.tscn" id="20_skel"]
+[ext_resource type="PackedScene" path="res://scenes/characters/quest_giver.tscn" id="21_qg"]
+[ext_resource type="Script" path="res://scenes/world/landmarks.gd" id="22_lm"]
+[ext_resource type="Script" path="res://scenes/ui/shop_ui.gd" id="23_shop"]
+[ext_resource type="Script" path="res://scenes/ui/quest_log.gd" id="24_qlog"]
+[ext_resource type="Script" path="res://scenes/ui/dialogue_ui.gd" id="25_dlg"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("2_main")
 
 [node name="World" parent="." instance=ExtResource("1_world")]
+
+[node name="Landmarks" type="Node3D" parent="."]
+script = ExtResource("22_lm")
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
@@ -42,6 +50,8 @@ chase_speed = 2.0
 attack_range = 2.1
 attack_damage = 15
 attack_cooldown = 1.8
+xp_reward = 14
+enemy_type = "orc"
 
 [node name="Humanoid" parent="Enemies/Orc" index="0"]
 skin_color = Color(0.34, 0.52, 0.26, 1)
@@ -77,6 +87,43 @@ fur_color = Color(0.55, 0.56, 0.6, 1)
 
 [node name="Skeleton" parent="Enemies" instance=ExtResource("20_skel")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -75, 18, 10)
+
+[node name="Goblin2" parent="Enemies" instance=ExtResource("5_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 15, 30)
+
+[node name="Goblin3" parent="Enemies" instance=ExtResource("5_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 15, 26)
+
+[node name="Goblin4" parent="Enemies" instance=ExtResource("5_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 15, 36)
+
+[node name="Goblin5" parent="Enemies" instance=ExtResource("5_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 15, 33)
+
+[node name="Orc2" parent="Enemies" instance=ExtResource("5_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -66, 15, 36)
+max_health = 12
+wander_speed = 0.9
+chase_speed = 2.0
+attack_range = 2.1
+attack_damage = 15
+attack_cooldown = 1.8
+xp_reward = 14
+enemy_type = "orc"
+
+[node name="Humanoid" parent="Enemies/Orc2" index="0"]
+skin_color = Color(0.34, 0.52, 0.26, 1)
+tunic_color = Color(0.3, 0.19, 0.11, 1)
+shorts_color = Color(0.26, 0.17, 0.1, 1)
+legs_color = Color(0.32, 0.5, 0.25, 1)
+boot_color = Color(0.2, 0.14, 0.09, 1)
+hair_color = Color(0.12, 0.16, 0.1, 1)
+hair_style = 3
+ear_style = 1
+ear_size = 1.2
+tusks = true
+tusk_size = 1.9
+bulk = 1.45
 
 [node name="HubProps" type="Node3D" parent="."]
 
@@ -163,6 +210,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 1.2, -9.5)
 [node name="Villager3" parent="HubProps/Village/Villagers" instance=ExtResource("10_villager")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 1.2, -8.5)
 
+[node name="QuestGiver" parent="HubProps/Village" instance=ExtResource("21_qg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1.2, -2)
+giver_id = "elder"
+
 [node name="ExtraChests" type="Node3D" parent="."]
 
 [node name="ChestRare" parent="ExtraChests" instance=ExtResource("12_chest")]
@@ -241,3 +292,26 @@ vertical_alignment = 1
 [node name="InventoryUI" parent="UI" instance=ExtResource("13_inv")]
 
 [node name="SettingsMenu" parent="UI" instance=ExtResource("15_set")]
+
+[node name="QuestLog" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("24_qlog")
+
+[node name="ShopUI" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("23_shop")
+
+[node name="DialogueUI" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("25_dlg")

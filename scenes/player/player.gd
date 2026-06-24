@@ -342,6 +342,7 @@ const STARTING_STAFF := {
 }
 
 var inventory: Array = []          # everything the player is carrying
+var coins := 0                     # spendable currency (quest rewards, loot; shop-ready)
 var equipped_weapon: Node3D = null # the currently-held weapon instance (in the hand)
 
 # Distinct equipment slots. Only "weapon" is functional for now; the others exist
@@ -362,6 +363,7 @@ const SPRINT_MULT := 1.6           # move-speed multiplier while sprinting
 const SPRINT_DRAIN := 24.0         # stamina/sec while sprinting
 const STAMINA_REGEN := 20.0        # stamina/sec when idle
 const REGEN_DELAY := 0.5           # pause before regen after spending
+const STAMINA_CAP := 150.0         # hard ceiling on max stamina (even fully geared)
 var max_stamina := 100.0
 var stamina := 100.0
 var _regen_delay := 0.0
@@ -370,10 +372,10 @@ var is_sprinting := false
 # --- Leveling / XP ---
 # Kill enemies -> gain XP -> level up. Leveling is intentionally SLOW (steep XP
 # curve, see xp_to_next). A new usable spell slot unlocks every 10 levels (up to
-# MAX_SPELLS, see _slots_for_level); each level also grows max HP/stamina and
-# unlocks the next curated spell in LEVEL_SPELL_ORDER.
+# MAX_SPELLS, see _slots_for_level); each level also grows max HP and
+# unlocks the next curated spell in LEVEL_SPELL_ORDER. Stamina does NOT grow with
+# level — only gear raises it (see get_max_stamina).
 const HP_PER_LEVEL := 10        # max health added per level
-const STA_PER_LEVEL := 6.0      # max stamina added per level
 const MAX_LEVEL := 50           # five spell slots reached at level 40 (one per 10)
 const LEVELS_PER_SLOT := 10     # a new spell slot every this many levels
 # Spells unlocked one-per-level (index 0 = the spell you start with at level 1).
@@ -671,14 +673,17 @@ func get_max_health() -> int:
 	return h
 
 
-## Passive: max stamina = 100 + per-level growth + equipped items' "stamina_bonus".
+## Passive: max stamina = 100 base + equipped items' "stamina_bonus". Leveling does
+## NOT grant stamina — only gear does. Hard-capped at STAMINA_CAP (150), so even
+## fully geared you never exceed it and the stamina pool stays tight (spells have no
+## cooldown, so stamina is the only limiter).
 func get_max_stamina() -> float:
-	var s := 100.0 + float(level - 1) * STA_PER_LEVEL
+	var s := 100.0
 	for slot in equipment:
 		var it = equipment[slot]
 		if it != null:
 			s += float(it.get("stamina_bonus", 0.0))
-	return maxf(20.0, s)
+	return clampf(s, 20.0, STAMINA_CAP)
 
 
 ## Passive: stamina regen = base + equipped items' "regen_bonus".
@@ -799,12 +804,11 @@ func _update_stamina(delta: float) -> void:
 
 
 ## Cast a slotted spell when its ability key (ability_1..5 = Q/R/F/C/V) is pressed,
-## if its slot is off cooldown and there's enough stamina. Each slot is independent.
+## if there's enough stamina. Spells have NO per-slot cooldown — stamina is the only
+## limiter, so the small stamina pool (100, up to 150 with armor) paces casting.
 func _handle_abilities() -> void:
 	for i in range(mini(MAX_SPELLS, equipped_spells.size())):
 		if not Input.is_action_just_pressed("ability_%d" % (i + 1)):
-			continue
-		if _spell_cd[i] > 0.0:
 			continue
 		var spell: Dictionary = SPELLS.get(equipped_spells[i], {})
 		if spell.is_empty():
@@ -814,7 +818,6 @@ func _handle_abilities() -> void:
 			continue  # not enough stamina
 		stamina -= cost
 		_regen_delay = REGEN_DELAY
-		_spell_cd[i] = float(spell.get("cd", 1.0))
 		_cast_spell(spell)
 		break  # one cast per frame
 
@@ -3319,6 +3322,10 @@ func take_damage(amount: int) -> void:
 
 
 func _respawn() -> void:
+	# Tell quests that forbid death so they can fail (see QuestManager.notify_player_died).
+	var quests := get_node_or_null("/root/Quests")
+	if quests != null:
+		quests.notify_player_died()
 	health = max_health
 	stamina = max_stamina
 	_flying = false
@@ -3342,6 +3349,37 @@ func _respawn() -> void:
 ## Add an item (dictionary) to the inventory.
 func add_item(item: Dictionary) -> void:
 	inventory.append(item)
+	# Let quests observe pickups (collect-style objectives).
+	var quests := get_node_or_null("/root/Quests")
+	if quests != null:
+		quests.notify_item_collected(str(item.get("name", "")))
+
+
+# --- Currency ---
+
+## Add (or, with a negative amount, remove) spendable coins. Never goes below 0.
+func add_coins(amount: int) -> void:
+	coins = maxi(0, coins + amount)
+
+
+## Try to spend `amount` coins. Returns false (and spends nothing) if too poor.
+func spend_coins(amount: int) -> bool:
+	if amount <= 0 or coins < amount:
+		return false
+	coins -= amount
+	return true
+
+
+# --- Spells (learned, e.g. as quest rewards) ---
+
+## Learn a spell by id (e.g. a quest reward). Returns true if it was NEWLY learned.
+## Auto-equips it if an ability slot is free; otherwise it's learned but benched.
+func learn_spell(spell_id: String) -> bool:
+	if not SPELLS.has(spell_id) or unlocked_spells.has(spell_id):
+		return false
+	unlocked_spells.append(spell_id)
+	_rebuild_loadout()
+	return true
 
 
 ## Equip an item into its slot. Only the "weapon" slot is functional right now:

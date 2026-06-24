@@ -90,7 +90,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_on_interact()
 
 
-## E priority: exit ship if piloting > board ship if near it > open a nearby chest.
+## E priority: exit/board ship > talk to a quest giver > open a nearby chest.
 func _on_interact() -> void:
 	if ship != null:
 		if piloting:
@@ -99,9 +99,30 @@ func _on_interact() -> void:
 		if ship.player_in_range:
 			_toggle_board()
 			return
+	var special = _nearest_in_range("special_npcs")
+	if special != null:
+		special.interact(player)
+		return
+	var giver = _nearest_in_range("quest_givers")
+	if giver != null:
+		giver.talk(player)
+		return
 	var chest = _nearest_unopened_chest()
 	if chest != null:
 		chest.open(player)
+
+
+## Nearest node in `group` whose `player_in_range` flag is set (or null).
+func _nearest_in_range(group: String):
+	var best = null
+	var best_dist := INF
+	for g in get_tree().get_nodes_in_group(group):
+		if g.player_in_range:
+			var d: float = player.global_position.distance_to(g.global_position)
+			if d < best_dist:
+				best = g
+				best_dist = d
+	return best
 
 
 func _nearest_unopened_chest():

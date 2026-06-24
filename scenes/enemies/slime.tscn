@@ -8,6 +8,7 @@ radius = 0.42
 
 [node name="Slime" type="CharacterBody3D"]
 script = ExtResource("1_enemy")
+enemy_type = "slime"
 max_health = 5
 wander_speed = 1.0
 chase_speed = 2.2

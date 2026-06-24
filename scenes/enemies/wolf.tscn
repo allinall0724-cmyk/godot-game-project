@@ -8,6 +8,7 @@ size = Vector3(0.5, 0.9, 1.2)
 
 [node name="Wolf" type="CharacterBody3D"]
 script = ExtResource("1_enemy")
+enemy_type = "wolf"
 max_health = 5
 wander_speed = 1.6
 chase_speed = 4.2

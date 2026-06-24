@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/characters/quest_giver.gd" id="1_qg"]
+[ext_resource type="PackedScene" uid="uid://dn0humanoid01" path="res://scenes/characters/humanoid.tscn" id="2_humanoid"]
+
+[sub_resource type="CapsuleShape3D" id="3_qgshape"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="SphereShape3D" id="4_qgarea"]
+radius = 2.6
+
+[node name="QuestGiver" type="CharacterBody3D"]
+script = ExtResource("1_qg")
+
+[node name="Humanoid" parent="." instance=ExtResource("2_humanoid")]
+skin_color = Color(0.88, 0.72, 0.58, 1)
+tunic_color = Color(0.3, 0.28, 0.45, 1)
+shorts_color = Color(0.2, 0.18, 0.3, 1)
+legs_color = Color(0.55, 0.5, 0.6, 1)
+boot_color = Color(0.25, 0.2, 0.3, 1)
+hair_color = Color(0.85, 0.85, 0.85, 1)
+hat_style = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("3_qgshape")
+
+[node name="InteractArea" type="Area3D" parent="."]
+
+[node name="AreaShape" type="CollisionShape3D" parent="InteractArea"]
+shape = SubResource("4_qgarea")
