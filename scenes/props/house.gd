@@ -210,32 +210,217 @@ func _tri(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3) -> void:
 	st.add_vertex(c)
 
 
-## Simple furnishings + a warm interior light so the inside reads as a lived-in room.
+## A lived-in cottage interior: bed + nightstand, dining table with seating, a
+## fireplace, a bookshelf, barrels, crates, wall shelves with pottery, ceiling
+## beams, a broom, and warm light from the hearth + a ceiling lamp.
 func _build_interior(hx: float, hz: float) -> void:
-	# Rug.
-	_box(Vector3(2.4, 0.03, 1.8), Vector3(0, 0.02, 0), _mat_cloth, false)
-	# Bed (frame + mattress + pillow) in a back corner.
-	var bx := hx - 0.9
-	var bz := -hz + 1.1
-	_box(Vector3(1.4, 0.35, 2.0), Vector3(bx, 0.18, bz), _mat_wood)
-	var mattress := StandardMaterial3D.new()
-	mattress.albedo_color = Color(0.85, 0.85, 0.8)
-	mattress.roughness = 1.0
-	_box(Vector3(1.3, 0.18, 1.9), Vector3(bx, 0.44, bz), mattress, false)
-	_box(Vector3(1.1, 0.14, 0.45), Vector3(bx, 0.6, bz - 0.7), _mat_cloth, false)
-	# Table (top + four legs) with a stool either side, opposite the bed.
-	var tx := -hx + 1.2
-	_box(Vector3(1.2, 0.1, 0.8), Vector3(tx, 0.78, 0.0), _mat_wood)
-	for lx in [-0.5, 0.5]:
-		for lz in [-0.3, 0.3]:
-			_box(Vector3(0.08, 0.73, 0.08), Vector3(tx + lx, 0.37, lz), _mat_wood, false)
-	_box(Vector3(0.4, 0.08, 0.4), Vector3(tx, 0.45, 1.0), _mat_wood, false)
-	_box(Vector3(0.4, 0.08, 0.4), Vector3(tx, 0.45, -1.0), _mat_wood, false)
-	# Warm hanging light.
+	# Shared extra materials.
+	var light_wood := _solid(Color(0.55, 0.42, 0.26), 0.85)
+	var metal := _solid(Color(0.24, 0.24, 0.27), 0.5)
+	metal.metallic = 0.5
+	var clay := _solid(Color(0.6, 0.35, 0.22), 0.9)
+	var linen := _solid(Color(0.82, 0.8, 0.72), 1.0)
+
+	_box(Vector3(2.4, 0.03, 1.8), Vector3(0, 0.02, 0), _mat_cloth, false)   # rug
+
+	_build_bed(hx, hz, linen)
+	_build_table(hx, light_wood, clay)
+	_build_fireplace(hx, hz)
+	_build_bookshelf(hx, light_wood)
+	_build_storage(hx, hz, light_wood, metal)
+	_build_wall_shelves(hx, light_wood, clay)
+	_build_ceiling_beams()
+	_build_broom(hx, hz)
+
+	# Soft overall ceiling lamp (the hearth supplies the warm flicker-ish glow).
 	var lamp := OmniLight3D.new()
 	lamp.position = Vector3(0, WALL_H - 0.5, 0)
-	lamp.light_color = Color(1.0, 0.85, 0.6)
-	lamp.light_energy = 1.3
+	lamp.light_color = Color(1.0, 0.88, 0.66)
+	lamp.light_energy = 0.9
 	lamp.omni_range = maxf(W, D) * 1.4
 	lamp.shadow_enabled = false
 	add_child(lamp)
+
+
+func _build_bed(hx: float, hz: float, linen: StandardMaterial3D) -> void:
+	var bx := hx - 0.9
+	var bz := -hz + 1.1
+	_box(Vector3(1.4, 0.35, 2.0), Vector3(bx, 0.18, bz), _mat_wood)             # frame
+	_box(Vector3(0.12, 0.55, 0.12), Vector3(bx - 0.6, 0.45, bz - 0.9), _mat_wood, false)  # posts
+	_box(Vector3(0.12, 0.55, 0.12), Vector3(bx + 0.6, 0.45, bz - 0.9), _mat_wood, false)
+	_box(Vector3(1.3, 0.18, 1.9), Vector3(bx, 0.44, bz), linen, false)          # mattress
+	_box(Vector3(1.24, 0.1, 1.1), Vector3(bx, 0.55, bz + 0.35), _mat_cloth, false)  # blanket
+	_box(Vector3(1.1, 0.14, 0.45), Vector3(bx, 0.6, bz - 0.7), linen, false)    # pillow
+	# Nightstand + candle beside the bed.
+	var nx := bx - 0.95
+	_box(Vector3(0.5, 0.5, 0.5), Vector3(nx, 0.25, bz - 0.6), _mat_wood)
+	_candle(Vector3(nx, 0.5, bz - 0.6))
+
+
+func _build_table(hx: float, light_wood: StandardMaterial3D, clay: StandardMaterial3D) -> void:
+	var tx := -hx + 1.2
+	_box(Vector3(1.2, 0.1, 0.8), Vector3(tx, 0.78, 0.0), light_wood)            # top
+	for lx in [-0.5, 0.5]:
+		for lz in [-0.3, 0.3]:
+			_box(Vector3(0.08, 0.73, 0.08), Vector3(tx + lx, 0.37, lz), light_wood, false)  # legs
+	# Tableware.
+	_cyl(0.12, 0.1, Vector3(tx - 0.2, 0.88, 0.1), clay, false)                  # bowl
+	_cyl(0.05, 0.18, Vector3(tx + 0.25, 0.92, -0.1), _solid(Color(0.3, 0.5, 0.6), 0.4), false)  # jug
+	# A stool and a chair (with backrest).
+	_box(Vector3(0.4, 0.08, 0.4), Vector3(tx, 0.45, 1.0), _mat_wood, false)
+	_box(Vector3(0.42, 0.08, 0.42), Vector3(tx, 0.45, -1.0), _mat_wood)         # chair seat
+	_box(Vector3(0.42, 0.5, 0.08), Vector3(tx, 0.7, -1.2), _mat_wood, false)    # chair back
+
+
+## Stone fireplace on the back wall: hearth, opening, logs, glowing embers (with a
+## warm light), a mantel and a chimney breast rising up the wall.
+func _build_fireplace(hx: float, hz: float) -> void:
+	var fx := -hx + 0.9
+	var wz := -hz + 0.3
+	_box(Vector3(1.5, 1.3, 0.5), Vector3(fx, 0.65, wz), _mat_stone)             # surround
+	_box(Vector3(0.9, 0.7, 0.4), Vector3(fx, 0.35, wz + 0.12), _solid(Color(0.08, 0.07, 0.07), 1.0), false)  # dark opening
+	_box(Vector3(1.7, 0.16, 0.6), Vector3(fx, 1.34, wz), _mat_wood, false)      # mantel
+	_box(Vector3(0.9, 1.4, 0.4), Vector3(fx, 2.1, wz - 0.05), _mat_stone, false)  # chimney breast
+	# Logs + ember glow (short upright billets inside the hearth).
+	_cyl(0.07, 0.42, Vector3(fx - 0.12, 0.24, wz + 0.18), _mat_wood, false)
+	_cyl(0.07, 0.42, Vector3(fx + 0.12, 0.24, wz + 0.16), _mat_wood, false)
+	var ember := _solid(Color(1.0, 0.45, 0.1), 1.0)
+	ember.emission_enabled = true
+	ember.emission = Color(1.0, 0.45, 0.1)
+	ember.emission_energy_multiplier = 4.0
+	_box(Vector3(0.7, 0.12, 0.3), Vector3(fx, 0.16, wz + 0.16), ember, false)
+	var fire := OmniLight3D.new()
+	fire.position = Vector3(fx, 0.5, wz + 0.3)
+	fire.light_color = Color(1.0, 0.5, 0.2)
+	fire.light_energy = 2.0
+	fire.omni_range = 6.0
+	fire.shadow_enabled = false
+	add_child(fire)
+
+
+## Tall bookshelf against the right wall, stacked with coloured books.
+func _build_bookshelf(hx: float, light_wood: StandardMaterial3D) -> void:
+	var sx := hx - 0.18
+	var sz := 1.5
+	_box(Vector3(0.32, 1.9, 1.1), Vector3(sx, 0.95, sz), light_wood)            # carcass
+	var book_cols := [Color(0.6, 0.2, 0.2), Color(0.2, 0.4, 0.55), Color(0.3, 0.5, 0.25),
+		Color(0.6, 0.5, 0.2), Color(0.4, 0.3, 0.5), Color(0.7, 0.6, 0.4)]
+	for shelf in range(3):
+		var sy := 0.45 + shelf * 0.55
+		_box(Vector3(0.3, 0.04, 1.0), Vector3(sx, sy, sz), _mat_wood, false)    # shelf board
+		for b in range(6):
+			var bz := sz - 0.42 + b * 0.15
+			var bh: float = 0.32 + (b % 3) * 0.04
+			var col: Color = book_cols[(shelf * 6 + b) % book_cols.size()]
+			_box(Vector3(0.16, bh, 0.11), Vector3(sx - 0.03, sy + bh * 0.5 + 0.02, bz), _solid(col, 0.9), false)
+
+
+## Barrels and a stack of crates in the front-left corner.
+func _build_storage(hx: float, hz: float, light_wood: StandardMaterial3D, metal: StandardMaterial3D) -> void:
+	var cx := -hx + 0.55
+	_barrel(Vector3(cx, 0.0, hz - 0.9), metal)
+	_barrel(Vector3(cx + 0.7, 0.0, hz - 0.7), metal)
+	# Crate stack in the front-right (clear of the bed, bookshelf and door).
+	_box(Vector3(0.6, 0.6, 0.6), Vector3(2.0, 0.3, hz - 0.9), light_wood)
+	_box(Vector3(0.5, 0.5, 0.5), Vector3(2.0, 0.85, hz - 0.9), light_wood)
+	_box(Vector3(0.55, 0.55, 0.55), Vector3(1.4, 0.28, hz - 0.5), light_wood)
+
+
+## Wall shelf above the table holding pots and a sack.
+func _build_wall_shelves(hx: float, light_wood: StandardMaterial3D, clay: StandardMaterial3D) -> void:
+	var sx := -hx + 0.16
+	_box(Vector3(0.26, 0.04, 1.4), Vector3(sx, 1.6, 1.4), light_wood, false)
+	_cyl(0.1, 0.22, Vector3(sx + 0.02, 1.73, 1.1), clay, false)
+	_cyl(0.08, 0.18, Vector3(sx + 0.02, 1.71, 1.4), _solid(Color(0.45, 0.5, 0.4), 0.9), false)
+	_cyl(0.11, 0.2, Vector3(sx + 0.02, 1.72, 1.75), clay, false)
+
+
+## Decorative ceiling beams spanning the room.
+func _build_ceiling_beams() -> void:
+	for z in [-1.4, 0.0, 1.4]:
+		_box(Vector3(W + 0.3, 0.14, 0.16), Vector3(0, WALL_H - 0.12, z), _mat_wood, false)
+
+
+## A broom leaning into the front-right corner.
+func _build_broom(hx: float, hz: float) -> void:
+	var pivot := Node3D.new()
+	pivot.position = Vector3(hx - 0.35, 0, hz - 0.35)
+	pivot.rotation = Vector3(0.18, 0, 0.14)
+	add_child(pivot)
+	var pole := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = 0.03
+	cm.bottom_radius = 0.03
+	cm.height = 1.5
+	pole.mesh = cm
+	pole.material_override = _mat_wood
+	pole.position = Vector3(0, 0.75, 0)
+	pivot.add_child(pole)
+	var bristles := MeshInstance3D.new()
+	var bm := CylinderMesh.new()
+	bm.top_radius = 0.03
+	bm.bottom_radius = 0.14
+	bm.height = 0.35
+	bristles.mesh = bm
+	bristles.material_override = _solid(Color(0.75, 0.6, 0.3), 1.0)
+	bristles.position = Vector3(0, 0.17, 0)
+	pivot.add_child(bristles)
+
+
+# --- Small helpers ----------------------------------------------------------
+
+## A lit candle: stick, drip, and an emissive flame.
+func _candle(base: Vector3) -> void:
+	_cyl(0.04, 0.18, base + Vector3(0, 0.09, 0), _solid(Color(0.9, 0.88, 0.8), 1.0), false)
+	var flame := _solid(Color(1.0, 0.8, 0.3), 1.0)
+	flame.emission_enabled = true
+	flame.emission = Color(1.0, 0.7, 0.25)
+	flame.emission_energy_multiplier = 5.0
+	flame.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	var f := MeshInstance3D.new()
+	var sm := SphereMesh.new()
+	sm.radius = 0.035
+	sm.height = 0.1
+	f.mesh = sm
+	f.material_override = flame
+	f.position = base + Vector3(0, 0.23, 0)
+	add_child(f)
+
+
+## A wooden barrel (body + two iron bands + lid) standing on the floor.
+func _barrel(base: Vector3, band_mat: StandardMaterial3D) -> void:
+	var body := _solid(Color(0.42, 0.3, 0.18), 0.9)
+	_cyl(0.27, 0.8, base + Vector3(0, 0.4, 0), body)
+	_cyl(0.29, 0.06, base + Vector3(0, 0.22, 0), band_mat, false)
+	_cyl(0.29, 0.06, base + Vector3(0, 0.6, 0), band_mat, false)
+	_cyl(0.24, 0.04, base + Vector3(0, 0.81, 0), body, false)
+
+
+## A cylinder mesh (and optional collider). `mostly_box_collider` swaps in a thin
+## box collider — used where a true cylinder collider isn't worth it.
+func _cyl(radius: float, height: float, pos: Vector3, mat: Material, collide := true, _logs := false) -> void:
+	var mi := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = radius
+	cm.bottom_radius = radius
+	cm.height = height
+	mi.mesh = cm
+	mi.material_override = mat
+	mi.position = pos
+	add_child(mi)
+	if collide:
+		var col := CollisionShape3D.new()
+		var cs := CylinderShape3D.new()
+		cs.radius = radius
+		cs.height = height
+		col.shape = cs
+		col.position = pos
+		add_child(col)
+
+
+## Make a solid-colour material quickly.
+func _solid(col: Color, rough: float) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_color = col
+	m.roughness = rough
+	return m

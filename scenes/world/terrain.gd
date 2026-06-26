@@ -64,6 +64,15 @@ var _rnoise: FastNoiseLite   # low-frequency mask: where mountain ranges are all
 #              floor_y:float, half_width, length, chamber_r }
 var _caves: Array[Dictionary] = []
 
+# Flat building pads / points-of-interest. The village clearing at the origin is
+# handled by FLAT_RADIUS in _landscape_height; THESE are the other "locations" (the
+# cursed evil-totem sites) that also get a flattened patch so structures and fights
+# sit on level ground. Coordinates match spawn_director.gd EVIL_SITES.
+const SITE_FLAT_R := 15.0       # fully-flat radius of each pad
+const SITE_FLAT_BLEND := 14.0   # blend ring back into the natural terrain
+const EVIL_SITES_XZ := [Vector2(150, 110), Vector2(-170, 150), Vector2(80, -180)]
+var _site_levels: Array = []    # the flattened height chosen for each evil site
+
 
 func _ready() -> void:
 	add_to_group("terrain")   # so the spawn director can sample ground height
@@ -88,6 +97,7 @@ func _ready() -> void:
 	_rnoise.seed = TERRAIN_SEED + 17
 	_rnoise.noise_type = FastNoiseLite.TYPE_SIMPLEX
 	_rnoise.frequency = 0.0028
+	_setup_site_flats()  # choose each location's level BEFORE anything samples height
 	_setup_caves()      # must run before the mesh/collision so the carve is baked in
 	_build_visual()
 	_build_collision()
@@ -96,15 +106,45 @@ func _ready() -> void:
 	_scatter_grass()
 
 
-## World height at an (x, z) position, INCLUDING cave carving.
+## World height at an (x, z) position, INCLUDING flat location pads + cave carving.
 func height_at(x: float, z: float) -> float:
 	return _apply_caves(x, z, _base_height(x, z))
 
 
-## Bare landscape height (no caves) — flat near the origin, rolling hills, and
-## ridged mountain ranges further out. Domain-warped for natural meandering and
-## masked so mountains form ranges instead of sprouting everywhere.
+## Pick a flat level for each evil site = the natural landscape height at its centre.
+## Done once, up front, so the flattened pad is identical everywhere it's sampled.
+func _setup_site_flats() -> void:
+	_site_levels.clear()
+	for c in EVIL_SITES_XZ:
+		_site_levels.append(_landscape_height(c.x, c.y))
+
+
+## World positions (with the flattened Y) of the evil sites, for the spawn director.
+func evil_sites() -> Array:
+	var out: Array = []
+	for i in range(EVIL_SITES_XZ.size()):
+		var c: Vector2 = EVIL_SITES_XZ[i]
+		out.append(Vector3(c.x, _site_levels[i], c.y))
+	return out
+
+
+## Landscape height with the flat location pads applied (village clearing lives in
+## _landscape_height; the evil sites are flattened to their chosen level here).
 func _base_height(x: float, z: float) -> float:
+	var h := _landscape_height(x, z)
+	var p := Vector2(x, z)
+	for i in range(EVIL_SITES_XZ.size()):
+		var d := p.distance_to(EVIL_SITES_XZ[i])
+		if d < SITE_FLAT_R + SITE_FLAT_BLEND:
+			var t := 1.0 - smoothstep(SITE_FLAT_R, SITE_FLAT_R + SITE_FLAT_BLEND, d)
+			h = lerpf(h, _site_levels[i], t)
+	return h
+
+
+## Bare landscape height (no pads, no caves) — flat near the origin, rolling hills,
+## and ridged mountain ranges further out. Domain-warped for natural meandering and
+## masked so mountains form ranges instead of sprouting everywhere.
+func _landscape_height(x: float, z: float) -> float:
 	# Domain warp: sample the terrain at a wobbled position so ridgelines meander.
 	var wx := x + _wnoise.get_noise_2d(x, z) * 22.0
 	var wz := z + _wnoise.get_noise_2d(x + 500.0, z - 500.0) * 22.0

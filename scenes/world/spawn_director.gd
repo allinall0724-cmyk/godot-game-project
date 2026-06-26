@@ -36,6 +36,7 @@ const EVIL_INTERVAL := 3.0
 
 var _ambient: Array = []      # wandering monsters we spawned (day/night)
 var _evil: Array = []         # monsters tied to the cursed sites
+var _evil_sites: Array = []   # resolved site positions (flattened Y from the terrain)
 var _timer := 4.0
 var _evil_timer := 2.0
 var _terrain
@@ -45,6 +46,12 @@ var _world
 func _ready() -> void:
 	_terrain = get_tree().get_first_node_in_group("terrain")
 	_world = get_tree().get_first_node_in_group("world")
+	# Prefer the terrain's flattened site positions (level pads); fall back to the
+	# raw constants if the terrain isn't found.
+	if _terrain != null and _terrain.has_method("evil_sites"):
+		_evil_sites = _terrain.evil_sites()
+	else:
+		_evil_sites = EVIL_SITES
 	_build_evil_markers()
 
 
@@ -119,7 +126,7 @@ func _ring_pos(center: Vector3) -> Vector3:
 # --- Cursed-site spawns (always active) -------------------------------------
 
 func _evil_spawn() -> void:
-	for site in EVIL_SITES:
+	for site in _evil_sites:
 		var near := 0
 		for e in _evil:
 			if e.global_position.distance_to(site) < EVIL_RADIUS * 1.5:
@@ -136,7 +143,7 @@ func _evil_spawn() -> void:
 
 
 func _build_evil_markers() -> void:
-	for site in EVIL_SITES:
+	for site in _evil_sites:
 		var marker := Node3D.new()
 		marker.position = Vector3(site.x, _ground(site.x, site.z), site.z)
 		add_child(marker)
