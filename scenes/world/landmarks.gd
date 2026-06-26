@@ -132,7 +132,7 @@ func _build_camp(root: Node3D) -> void:
 	l2.rotation = Vector3(PI * 0.5, -0.5, 0)
 	var ember := _emis(Color(1.0, 0.45, 0.12), 4.0)
 	_box(root, Vector3(0.4, 0.1, 0.4), Vector3(0, 0.08, 0), ember, false)
-	_light(root, Vector3(0, 0.6, 0), Color(1.0, 0.5, 0.2), 1.6, 6.0)
+	_light(root, Vector3(0, 0.6, 0), Color(1.0, 0.5, 0.2), 1.6, 5.0)
 	# Lean-to shelter.
 	var cloth := _mat(Color(0.5, 0.42, 0.3))
 	var lean := _box(root, Vector3(2.2, 0.1, 1.8), Vector3(2.2, 1.0, 0), cloth, false)
@@ -151,7 +151,7 @@ func _build_shrine(root: Node3D) -> void:
 	var eye := _emis(Color(0.7, 0.2, 0.9), 5.0)
 	_box(root, Vector3(0.1, 0.08, 0.05), Vector3(-0.15, 2.4, -0.26), eye, false)
 	_box(root, Vector3(0.1, 0.08, 0.05), Vector3(0.15, 2.4, -0.26), eye, false)
-	_light(root, Vector3(0, 2.3, 0), Color(0.6, 0.2, 0.9), 2.0, 9.0)
+	_light(root, Vector3(0, 2.3, 0), Color(0.6, 0.2, 0.9), 2.0, 7.0)
 
 
 func _build_well(root: Node3D) -> void:
@@ -191,7 +191,7 @@ func _build_fairy(root: Node3D) -> void:
 		var pos := Vector3(cos(a) * 2.0, 0, sin(a) * 2.0)
 		_cyl(root, 0.05, 0.3, pos + Vector3(0, 0.15, 0), stalk, false)
 		_sphere(root, 0.13, pos + Vector3(0, 0.32, 0), cap)
-	_light(root, Vector3(0, 0.6, 0), Color(0.4, 0.9, 0.5), 1.2, 6.0)
+	_light(root, Vector3(0, 0.6, 0), Color(0.4, 0.9, 0.5), 1.2, 5.0)
 
 
 # --- Mesh helpers ------------------------------------------------------------

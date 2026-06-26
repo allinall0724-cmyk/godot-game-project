@@ -233,11 +233,13 @@ func _build_interior(hx: float, hz: float) -> void:
 	_build_broom(hx, hz)
 
 	# Soft overall ceiling lamp (the hearth supplies the warm flicker-ish glow).
+	# Range stays roughly within the house so it doesn't stack onto neighbours/ground
+	# (the Compatibility renderer used for web limits lights-per-object).
 	var lamp := OmniLight3D.new()
 	lamp.position = Vector3(0, WALL_H - 0.5, 0)
 	lamp.light_color = Color(1.0, 0.88, 0.66)
-	lamp.light_energy = 0.9
-	lamp.omni_range = maxf(W, D) * 1.4
+	lamp.light_energy = 1.1
+	lamp.omni_range = 4.6
 	lamp.shadow_enabled = false
 	add_child(lamp)
 
@@ -293,7 +295,7 @@ func _build_fireplace(hx: float, hz: float) -> void:
 	fire.position = Vector3(fx, 0.5, wz + 0.3)
 	fire.light_color = Color(1.0, 0.5, 0.2)
 	fire.light_energy = 2.0
-	fire.omni_range = 6.0
+	fire.omni_range = 4.4
 	fire.shadow_enabled = false
 	add_child(fire)
 

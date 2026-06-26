@@ -68,11 +68,12 @@ func _ready() -> void:
 	_flame.position = Vector3(0, POST_H + 0.32, 0)
 	add_child(_flame)
 
-	# Warm flickering light.
+	# Warm flickering light. Range kept modest so the Compatibility renderer (web)
+	# doesn't pile too many lights onto any one object.
 	_light = OmniLight3D.new()
 	_light.light_color = Color(1.0, 0.7, 0.35)
 	_light.light_energy = BASE_ENERGY
-	_light.omni_range = 9.0
+	_light.omni_range = 6.5
 	_light.shadow_enabled = false
 	_light.position = Vector3(0, POST_H + 0.35, 0)
 	add_child(_light)

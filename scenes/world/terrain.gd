@@ -405,7 +405,7 @@ func _build_caves() -> void:
 		var center: Vector2 = c.mouth + c.dir * c.length
 		var light := OmniLight3D.new()
 		light.position = Vector3(center.x, c.floor_y + CHAMBER_H * 0.4, center.y)
-		light.omni_range = c.chamber_r * 3.2
+		light.omni_range = c.chamber_r * 2.1
 		light.light_energy = 1.7
 		light.light_color = Color(1.0, 0.82, 0.55)
 		light.shadow_enabled = false

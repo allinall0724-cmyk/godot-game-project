@@ -178,7 +178,7 @@ func _build_evil_markers() -> void:
 		var light := OmniLight3D.new()
 		light.light_color = Color(0.9, 0.15, 0.12)
 		light.light_energy = 2.5
-		light.omni_range = 14.0
+		light.omni_range = 11.0
 		light.shadow_enabled = false
 		light.position = Vector3(0, 3.4, 0)
 		marker.add_child(light)

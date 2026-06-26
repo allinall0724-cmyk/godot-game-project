@@ -31,10 +31,11 @@ const SEGMENTS := [
 	["hub", "door1"], ["hub", "door2"], ["hub", "door3"],
 ]
 
-# Where torches go (x, z). Plaza ring, along the path, and beside the doors.
+# Where torches go (x, z). Plaza, along the path, and beside the doors. Kept to a
+# handful so the Compatibility renderer (web) doesn't overload the village lighting.
 const TORCHES := [
-	Vector2(2.9, 1.0), Vector2(-2.4, 2.4), Vector2(0.6, -3.2),
-	Vector2(-4.2, -2.0), Vector2(-7.0, -7.2),
+	Vector2(2.9, 1.0), Vector2(-2.4, 2.4),
+	Vector2(-7.0, -7.2),
 	Vector2(-11.3, -8.4), Vector2(-8.6, -12.3), Vector2(-14.3, -7.9),
 ]
 
