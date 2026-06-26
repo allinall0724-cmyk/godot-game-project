@@ -168,6 +168,7 @@ func _process(delta: float) -> void:
 	# Detect a level-up and flash the banner.
 	if lvl > _last_level:
 		_show_banner("LEVEL UP!   Lv %d" % lvl)
+		CrazyGames.happytime()   # positive beat (no-op off the web)
 	_last_level = lvl
 
 	if _banner_time > 0.0:

@@ -28,6 +28,10 @@ func _ready() -> void:
 		ship.set_camera(camera)
 		ship.set_active(false)
 
+	# The heavy world generation has finished by the time _ready runs, so tell the
+	# CrazyGames SDK loading is done (no-op off the web).
+	CrazyGames.loading_stop()
+
 	# First load only: pick a character. On later loads we restore the saved one
 	# and drop straight into gameplay.
 	var saved := _load_saved_character()
@@ -35,7 +39,47 @@ func _ready() -> void:
 		_show_character_select()
 	else:
 		_apply_appearance(saved)
-		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		# In the browser, mouse capture (pointer lock) and audio need a user gesture,
+		# so gate the saved-character path behind a "Click to Play" screen.
+		if OS.has_feature("web"):
+			player.set_active(false)
+			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+			_show_click_to_play()
+		else:
+			_begin_play()
+
+
+## Capture the mouse, unfreeze the player and tell CrazyGames active play has begun.
+func _begin_play() -> void:
+	player.set_active(true)
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	CrazyGames.gameplay_start()
+
+
+## Browser-only "Click to Play" overlay — provides the user gesture the browser
+## needs before locking the pointer (and unmuting audio later).
+func _show_click_to_play() -> void:
+	var layer := get_node_or_null("UI")
+	if layer == null:
+		_begin_play()
+		return
+	var overlay := ColorRect.new()
+	overlay.name = "ClickToPlay"
+	overlay.color = Color(0.04, 0.05, 0.08, 0.92)
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	var label := Label.new()
+	label.text = "Click to Play"
+	label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 40)
+	overlay.add_child(label)
+	overlay.gui_input.connect(func(e: InputEvent):
+		if e is InputEventMouseButton and e.pressed:
+			overlay.queue_free()
+			_begin_play())
+	layer.add_child(overlay)
 
 
 ## Launch screen: choose a starting look. The player is frozen and the cursor is
@@ -54,8 +98,8 @@ func _on_character_chosen(preset: Dictionary, sel: CharacterSelect) -> void:
 	_apply_appearance(preset)
 	_save_character(str(preset.get("name", "")))
 	sel.queue_free()
-	player.set_active(true)
-	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	# The confirm click is itself a user gesture, so we can capture straight away.
+	_begin_play()
 
 
 func _apply_appearance(preset: Dictionary) -> void:

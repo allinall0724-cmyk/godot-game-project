@@ -12,8 +12,12 @@ config_version=5
 
 config/name="godot-game-project"
 run/main_scene="uid://chwob76l3h8ax"
-config/features=PackedStringArray("4.7", "Forward Plus")
+config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[autoload]
+
+CrazyGames="*res://scenes/web/crazygames.gd"
 
 [display]
 
@@ -110,4 +114,5 @@ common/physics_ticks_per_second=120
 
 [rendering]
 
-rendering_device/driver.windows="d3d12"
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
