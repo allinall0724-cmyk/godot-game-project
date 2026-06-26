@@ -12,7 +12,8 @@ size = Vector3(1.6, 1.2, 1.8)
 
 [node name="Player" type="CharacterBody3D"]
 wall_min_slide_angle = 0.0
-floor_snap_length = 0.6
+floor_constant_speed = true
+floor_snap_length = 1.0
 safe_margin = 0.04
 script = ExtResource("1_j8ro0")
 

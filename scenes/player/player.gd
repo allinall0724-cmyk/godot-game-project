@@ -247,7 +247,8 @@ const DEFAULT_SPELLS := ["fireball", "lightning_zap", "levitate", "gust", "meteo
 const FLY_SPEED := 10.0      # flight movement speed
 const FLY_VERTICAL := 7.0    # ascend/descend speed (jump = up, sprint = down)
 const FLY_DRAIN := 16.0      # stamina/sec while airborne under flight
-const GROUND_SNAP := 0.6     # floor_snap_length on foot (matches player.tscn); 0 while flying
+const GROUND_SNAP := 1.0     # floor_snap_length on foot (matches player.tscn); 0 while flying
+                             # (higher = sticks to slopes going downhill, less hill stutter)
 
 @onready var attack_hitbox: Area3D = $AttackHitbox
 @onready var attack_shape: CollisionShape3D = $AttackHitbox/CollisionShape3D
@@ -1561,7 +1562,8 @@ func _rapid_shot(mv: Dictionary) -> void:
 	fb.setup(dir, _amp(int(mv.get("dmg", 2))), float(mv.get("speed", 38.0)), float(mv.get("size", 0.5)), mv.get("color", LTNG_COL), false)
 
 
-# Mobility: blink — teleport along the aim (clamped so we don't warp into terrain).
+# Mobility: blink — teleport along the aim. Always lands ON the ground surface at
+# the destination, so you can NEVER warp under the terrain (no matter the aim/hill).
 func _eff_teleport(mv: Dictionary) -> void:
 	var rng: float = float(mv.get("range", 12.0))
 	var col: Color = mv.get("color", ARCANE_COL)
@@ -1569,20 +1571,35 @@ func _eff_teleport(mv: Dictionary) -> void:
 	var start := global_position
 	var origin := global_position + Vector3.UP * 1.0
 	var space := get_world_3d().direct_space_state
+	# Blink along the aim, but stop short of any wall so we don't tunnel through it.
 	var q := PhysicsRayQueryParameters3D.create(origin, origin + dir * rng)
 	q.exclude = [get_rid()]
 	var hit := space.intersect_ray(q)
 	var dest := origin + dir * rng
 	if hit.has("position"):
 		dest = (hit["position"] as Vector3) - dir * 1.0  # stop short of the wall
-	dest.y = start.y
-	# Settle onto the ground at the destination.
-	var dh := space.intersect_ray(PhysicsRayQueryParameters3D.create(dest + Vector3.UP * 4.0, dest - Vector3.UP * 20.0))
-	if dh.has("position"):
-		dest = (dh["position"] as Vector3) + Vector3.UP * 0.1
+	# Snap the destination onto the GROUND at that XZ. The terrain's own height is
+	# authoritative (it accounts for hills, carved caves and flattened sites), so we
+	# can never end up below the surface; fall back to a high downward ray otherwise.
+	dest.y = _surface_y(dest) + 0.1
 	_spawn_burst(start + Vector3.UP * 1.0, 0.6, col, 8)
 	global_position = dest
 	_spawn_burst(global_position + Vector3.UP * 1.0, 0.6, col, 8)
+
+
+## Ground height at an XZ position. Prefers the terrain's exact height_at(); if the
+## terrain isn't found, casts straight down from high above any possible hill.
+func _surface_y(pos: Vector3) -> float:
+	var terr = get_tree().get_first_node_in_group("terrain")
+	if terr != null and terr.has_method("height_at"):
+		return float(terr.height_at(pos.x, pos.z))
+	var space := get_world_3d().direct_space_state
+	var q := PhysicsRayQueryParameters3D.create(Vector3(pos.x, 400.0, pos.z), Vector3(pos.x, -100.0, pos.z))
+	q.exclude = [get_rid()]
+	var hit := space.intersect_ray(q)
+	if hit.has("position"):
+		return float((hit["position"] as Vector3).y)
+	return pos.y
 
 
 # Structure: a temporary solid (wall / ramp / platform) that blocks movement and
