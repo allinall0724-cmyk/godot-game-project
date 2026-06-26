@@ -38,7 +38,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 2, 4)
 
 [node name="Orc" parent="Enemies" instance=ExtResource("5_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 2, 2)
-max_health = 12
+max_health = 70
 wander_speed = 0.9
 chase_speed = 2.0
 attack_range = 2.1

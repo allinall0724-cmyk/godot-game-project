@@ -9,7 +9,7 @@ height = 1.8
 
 [node name="Skeleton" type="CharacterBody3D"]
 script = ExtResource("1_enemy")
-max_health = 5
+max_health = 26
 wander_speed = 1.0
 chase_speed = 3.0
 attack_range = 1.9

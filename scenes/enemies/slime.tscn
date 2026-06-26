@@ -8,7 +8,7 @@ radius = 0.42
 
 [node name="Slime" type="CharacterBody3D"]
 script = ExtResource("1_enemy")
-max_health = 5
+max_health = 22
 wander_speed = 1.0
 chase_speed = 2.2
 attack_range = 1.5

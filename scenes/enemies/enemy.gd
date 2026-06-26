@@ -8,7 +8,7 @@ extends CharacterBody3D
 ## the Orc instance in node_3d.tscn overrides these exports to be a slower, tankier,
 ## harder-hitting brute. Drop more instances in the scene tree to add enemies.
 
-@export var max_health := 6        # hits to defeat
+@export var max_health := 30       # hits to defeat
 @export var wander_speed := 1.2
 @export var chase_speed := 2.8     # speed while pursuing the player
 @export var detect_range := 13.0   # starts chasing within this distance

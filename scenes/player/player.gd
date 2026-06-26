@@ -24,7 +24,8 @@ const BASE_JUMP_VELOCITY := 7.5
 # --- Attack tuning (the STAFF is the basic-attack weapon) ---
 # The player always wields a single staff. Melee damage scales with its tier (see
 # get_attack_damage()); the directional/charge/dodge melee mechanics are unchanged.
-const BASE_ATTACK_DAMAGE := 2   # Tier 1 baseline; +2 per tier above 1
+const BASE_ATTACK_DAMAGE := 8   # Tier 1 baseline; +4 per tier above 1 (scaled up to
+                                # keep melee viable against the tougher enemies)
 const ATTACK_DURATION := 0.18   # how long the hitbox stays active per swing
 const ATTACK_COOLDOWN := 0.40   # base min time between swings
 const STAFF_REACH := 1.15       # melee hitbox scale (the staff is long)
@@ -638,8 +639,8 @@ func get_ability_bar_moves() -> Array:
 func get_attack_damage() -> int:
 	var t := weapon_tier()
 	if t <= 0:
-		return 1
-	return BASE_ATTACK_DAMAGE + (t - 1) * 2
+		return 4
+	return BASE_ATTACK_DAMAGE + (t - 1) * 4
 
 
 ## Move speed = base + equipped items' "move_mod" / "speed_bonus".
@@ -788,10 +789,16 @@ func heal(amount: int) -> void:
 
 
 ## Apply the active +damage buff to a base damage value (for spells and melee).
+## Global spell-damage scale. All spell damage flows through _amp, so this one
+## multiplier makes every spell hit harder — tuned so spells land meaningful chunks
+## on a ~100-HP target (e.g. another player), not just the low-HP critters.
+const SPELL_DMG_MULT := 4.0
+
 func _amp(base: int) -> int:
+	var d := float(base) * SPELL_DMG_MULT
 	if _power_time > 0.0:
-		return maxi(1, int(round(float(base) * (1.0 + _power_amt))))
-	return base
+		d *= (1.0 + _power_amt)   # Empower buff stacks on top
+	return maxi(1, int(round(d)))
 
 
 func _update_stamina(delta: float) -> void:
