@@ -107,9 +107,28 @@ func _on_interact() -> void:
 	if npc != null:
 		_open_trade(npc)
 		return
+	var landmark = _nearest_landmark()
+	if landmark != null:
+		var msg: String = landmark.interact(player)
+		var hud = get_node_or_null("UI/HUD")
+		if hud != null and hud.has_method("show_toast"):
+			hud.show_toast(msg)
+		return
 	var chest = _nearest_unopened_chest()
 	if chest != null:
 		chest.open(player)
+
+
+## Nearest searchable mini-location within reach, or null.
+func _nearest_landmark():
+	var best = null
+	var best_d := 4.0
+	for l in get_tree().get_nodes_in_group("landmarks"):
+		var d: float = player.global_position.distance_to(l.global_position)
+		if d < best_d:
+			best_d = d
+			best = l
+	return best
 
 
 ## Nearest villager within talking distance, or null.

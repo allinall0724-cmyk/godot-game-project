@@ -13,6 +13,8 @@ var xp_label: Label
 var banner: Label
 var coin_label: Label
 var time_label: Label
+var toast: Label
+var _toast_time := 0.0
 var _last_level := 1
 var _banner_time := 0.0
 
@@ -23,6 +25,35 @@ func _ready() -> void:
 	_build_xp_ui()
 	_build_banner()
 	_build_status()
+	_build_toast()
+
+
+## A discovery/notice line that fades near the lower-centre of the screen.
+func _build_toast() -> void:
+	toast = Label.new()
+	toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	toast.set_anchors_preset(Control.PRESET_CENTER)
+	toast.anchor_left = 0.5
+	toast.anchor_right = 0.5
+	toast.anchor_top = 0.8
+	toast.anchor_bottom = 0.8
+	toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	toast.add_theme_font_size_override("font_size", 20)
+	toast.add_theme_color_override("font_color", Color(1.0, 0.95, 0.7))
+	toast.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	toast.add_theme_constant_override("outline_size", 6)
+	toast.modulate.a = 0.0
+	add_child(toast)
+
+
+## Show a transient message (used for landmark discoveries).
+func show_toast(text: String) -> void:
+	if toast == null:
+		return
+	toast.text = text
+	toast.modulate.a = 1.0
+	_toast_time = 4.0
 
 
 ## Coins + day/night readout, top-right corner.
@@ -144,6 +175,12 @@ func _process(delta: float) -> void:
 		banner.modulate.a = clampf(_banner_time / 1.6, 0.0, 1.0)
 		if _banner_time <= 0.0:
 			banner.modulate.a = 0.0
+
+	if _toast_time > 0.0:
+		_toast_time -= delta
+		toast.modulate.a = clampf(_toast_time / 1.0, 0.0, 1.0)
+		if _toast_time <= 0.0:
+			toast.modulate.a = 0.0
 
 
 func _show_banner(text: String) -> void:

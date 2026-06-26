@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://chwob76l3h8ax"]
+[gd_scene load_steps=24 format=3 uid="uid://chwob76l3h8ax"]
 
 [ext_resource type="PackedScene" uid="uid://bfx7t2cqq6i8" path="res://scenes/world/world.tscn" id="1_world"]
 [ext_resource type="Script" path="res://main.gd" id="2_main"]
@@ -22,6 +22,7 @@
 [ext_resource type="PackedScene" uid="uid://dn0skeleton01" path="res://scenes/enemies/skeleton.tscn" id="20_skel"]
 [ext_resource type="Script" path="res://scenes/props/village_decor.gd" id="21_decor"]
 [ext_resource type="Script" path="res://scenes/world/spawn_director.gd" id="22_spawn"]
+[ext_resource type="Script" path="res://scenes/world/landmarks.gd" id="23_landmarks"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("2_main")
@@ -180,6 +181,9 @@ loot_set = "island_epic"
 
 [node name="SpawnDirector" type="Node3D" parent="."]
 script = ExtResource("22_spawn")
+
+[node name="Landmarks" type="Node3D" parent="."]
+script = ExtResource("23_landmarks")
 
 [node name="CameraController" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 6)

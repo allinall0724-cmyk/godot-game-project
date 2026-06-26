@@ -23,7 +23,8 @@ const FLAT_RADIUS := 28.0    # radius of the flat village clearing at the origin
 const FLAT_BLEND := 18.0     # distance over which it blends into hills
 const HILL_AMP := 8.0        # rolling-hill height
 const MOUNTAIN_AMP := 95.0   # peak height
-const SCATTER_TREES := 130
+const SCATTER_TREES := 130         # (legacy; trees now use SCATTER_TREE_TRIES below)
+const SCATTER_TREE_TRIES := 1800   # tree placement attempts, filtered by biome chance
 const SCATTER_ROCKS := 80          # rocks scattered anywhere on walkable ground
 const SCATTER_ROCKS_HILL := 70     # extra rocks clustered on the foothills/mountains
 const TERRAIN_SEED := 20240601
@@ -59,6 +60,13 @@ var _mnoise: FastNoiseLite
 var _cnoise: FastNoiseLite   # high-frequency mottling so the ground isn't flat-coloured
 var _wnoise: FastNoiseLite   # domain-warp noise (meandering ridgelines)
 var _rnoise: FastNoiseLite   # low-frequency mask: where mountain ranges are allowed
+var _bnoise: FastNoiseLite   # biome regions (meadow / plains / forest / dark forest)
+
+# Biomes (lowland flavour — mountains/snow are decided by height regardless).
+const B_MEADOW := 0     # ordinary green grassland (the default)
+const B_PLAINS := 1     # open golden plains, few trees
+const B_FOREST := 2     # dense green woodland
+const B_DARK := 3       # dark forest: gnarled near-black trees, gloomy ground
 
 # Each cave: { mouth:Vector2 (xz), dir:Vector2 (unit, into the mountain),
 #              floor_y:float, half_width, length, chamber_r }
@@ -97,18 +105,37 @@ func _ready() -> void:
 	_rnoise.seed = TERRAIN_SEED + 17
 	_rnoise.noise_type = FastNoiseLite.TYPE_SIMPLEX
 	_rnoise.frequency = 0.0028
+	_bnoise = FastNoiseLite.new()
+	_bnoise.seed = TERRAIN_SEED + 53
+	_bnoise.noise_type = FastNoiseLite.TYPE_SIMPLEX
+	_bnoise.frequency = 0.0045
 	_setup_site_flats()  # choose each location's level BEFORE anything samples height
 	_setup_caves()      # must run before the mesh/collision so the carve is baked in
 	_build_visual()
 	_build_collision()
 	_build_caves()      # roof + chamber geometry over the carved-out space
-	_scatter()
+	_scatter_trees()    # biome-aware forests / plains / dark forest
+	_scatter()          # rocks
 	_scatter_grass()
 
 
 ## World height at an (x, z) position, INCLUDING flat location pads + cave carving.
 func height_at(x: float, z: float) -> float:
 	return _apply_caves(x, z, _base_height(x, z))
+
+
+## Which lowland biome an (x, z) falls in. Used for ground tint + tree scattering,
+## and queried by the landmark placer so POIs land in fitting biomes.
+func biome_at(x: float, z: float) -> int:
+	# A separate, higher-frequency channel carves out the (rarer) dark-forest patches.
+	if _bnoise.get_noise_2d(x * 1.4 + 2000.0, z * 1.4 - 2000.0) > 0.42:
+		return B_DARK
+	var b := _bnoise.get_noise_2d(x, z)
+	if b > 0.18:
+		return B_FOREST
+	if b < -0.22:
+		return B_PLAINS
+	return B_MEADOW
 
 
 ## Pick a flat level for each evil site = the natural landscape height at its centre.
@@ -327,6 +354,16 @@ func _ground_color(h: float, slope: float, x: float, z: float) -> Color:
 		base = C_ROCK
 	else:
 		base = C_ROCK.lerp(C_SNOW, clampf((h - 46.0) / 8.0, 0.0, 1.0))
+	# Biome tint on the lower/grassy ground (fades out as it rises into rock).
+	if h < 16.0 and slope < 0.45:
+		var gt := clampf(1.0 - h / 16.0, 0.0, 1.0)
+		match biome_at(x, z):
+			B_FOREST:
+				base = base.lerp(Color(0.17, 0.33, 0.15), 0.38 * gt)
+			B_PLAINS:
+				base = base.lerp(Color(0.58, 0.55, 0.28), 0.45 * gt)   # dry golden grass
+			B_DARK:
+				base = base.lerp(Color(0.13, 0.16, 0.14), 0.55 * gt)   # gloomy, desaturated
 	# Steep faces below the snow line are exposed rock regardless of height.
 	if h < 46.0 and slope > 0.4:
 		base = base.lerp(C_ROCK_D, clampf((slope - 0.4) / 0.5, 0.0, 1.0))
@@ -466,19 +503,56 @@ func _add_cave_tri(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, ref: Vec
 
 # --- Scatter -----------------------------------------------------------------
 
-func _scatter() -> void:
+## Biome-aware trees: dense green woodland in FOREST, gnarled near-black trees in
+## the DARK forest, near-bare PLAINS, and a light scatter on ordinary meadow.
+func _scatter_trees() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = TERRAIN_SEED + 7
-	var tree_scene: PackedScene = load("res://scenes/props/tree.tscn")
+	var TV := preload("res://scenes/props/tree_variant.gd")
+	var parent := Node3D.new()
+	parent.name = "ScatterTrees"
+	add_child(parent)
+	for i in range(SCATTER_TREE_TRIES):
+		var x := rng.randf_range(-SIZE * 0.47, SIZE * 0.47)
+		var z := rng.randf_range(-SIZE * 0.47, SIZE * 0.47)
+		if Vector2(x, z).length() < FLAT_RADIUS + 8.0:
+			continue
+		if _in_cave_area(x, z):
+			continue
+		var h := height_at(x, z)
+		if h > 26.0 or h < -1.0:                 # trees only on the lower ground
+			continue
+		var biome := biome_at(x, z)
+		var chance := 0.0
+		var kind := 0
+		match biome:
+			B_FOREST:
+				chance = 0.55
+				kind = 1 if rng.randf() < 0.5 else 0   # pines + broadleaf
+			B_DARK:
+				chance = 0.6
+				kind = 2                                # gnarled dark trees
+			B_PLAINS:
+				chance = 0.05                           # a lonely tree here and there
+				kind = 0
+			_:
+				chance = 0.18                           # light meadow scatter
+				kind = 0
+		if rng.randf() > chance:
+			continue
+		var t = TV.new()
+		t.kind = kind
+		parent.add_child(t)
+		t.global_position = Vector3(x, h, z)
+
+
+func _scatter() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = TERRAIN_SEED + 19
 	var rock_scene: PackedScene = load("res://scenes/props/rock.tscn")
-	var trees := Node3D.new()
-	trees.name = "ScatterTrees"
-	add_child(trees)
 	var rocks := Node3D.new()
 	rocks.name = "ScatterRocks"
 	add_child(rocks)
-	for i in range(SCATTER_TREES):
-		_place(tree_scene, trees, rng, 14.0)             # forests on the lowlands/foothills
 	for i in range(SCATTER_ROCKS):
 		_place(rock_scene, rocks, rng, 50.0)             # rocks anywhere on walkable ground
 	for i in range(SCATTER_ROCKS_HILL):
