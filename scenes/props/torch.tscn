@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dn0torch0001"]
+
+[ext_resource type="Script" path="res://scenes/props/torch.gd" id="1_torch"]
+
+[node name="Torch" type="StaticBody3D"]
+script = ExtResource("1_torch")

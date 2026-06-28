@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://chwob76l3h8ax"]
+[gd_scene load_steps=27 format=3 uid="uid://chwob76l3h8ax"]
 
 [ext_resource type="PackedScene" uid="uid://bfx7t2cqq6i8" path="res://scenes/world/world.tscn" id="1_world"]
 [ext_resource type="Script" path="res://main.gd" id="2_main"]
@@ -25,6 +25,7 @@
 [ext_resource type="Script" path="res://scenes/ui/shop_ui.gd" id="23_shop"]
 [ext_resource type="Script" path="res://scenes/ui/quest_log.gd" id="24_qlog"]
 [ext_resource type="Script" path="res://scenes/ui/dialogue_ui.gd" id="25_dlg"]
+[ext_resource type="Script" path="res://scenes/props/village_decor.gd" id="21_decor"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("2_main")
@@ -190,14 +191,17 @@ loot_set = "armory2"
 
 [node name="Village" type="Node3D" parent="HubProps"]
 
+[node name="VillageDecor" type="Node3D" parent="HubProps/Village"]
+script = ExtResource("21_decor")
+
 [node name="House1" parent="HubProps/Village" instance=ExtResource("9_house")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.1, -6)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -10, 0, -6)
 
 [node name="House2" parent="HubProps/Village" instance=ExtResource("9_house")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.1, -11)
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -6, 0, -11)
 
 [node name="House3" parent="HubProps/Village" instance=ExtResource("9_house")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 0.1, -11)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 0, -11)
 
 [node name="Villagers" type="Node3D" parent="HubProps/Village"]
 
